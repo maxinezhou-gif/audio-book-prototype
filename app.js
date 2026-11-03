@@ -567,7 +567,7 @@
         } else if (action === 'Record again' || action === 'Record audio') {
           openSheet(tile);
         } else {
-          toast(`"${action}" is not part of this flow`);
+          toast(`"${action}" is out of scope for this prototype`);
         }
       });
     });
