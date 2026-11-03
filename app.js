@@ -487,10 +487,10 @@
   el.bulkRecord.addEventListener('click', startNewRecording);
 
   el.linkSticker.addEventListener('click', () => {
-    toast(`Linking "${activeTile().name}" to a tag — next screen not in this flow`);
+    toast('Linking is out of scope for this prototype');
   });
   el.bulkLink.addEventListener('click', () => {
-    toast(`Linking ${unlinkedCount()} recordings to tags — next screen not in this flow`);
+    toast('Linking is out of scope for this prototype');
   });
 
   el.sheetClose.addEventListener('click', closeSheet);
