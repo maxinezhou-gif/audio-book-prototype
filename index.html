@@ -56,6 +56,23 @@
   }
   .index__item:active { transform: scale(.99); }
 
+  /* One entry needs a word of orientation: the button that starts the
+     animation sits below the fold of the device's own scroll, so a visitor
+     can land there and see nothing happen. Same muted 13px as the Viewing
+     notes below, so it reads as guidance rather than as part of the label. */
+  .index__item--noted {
+    flex-direction: column;
+    gap: 2px;
+    height: auto;
+    min-height: 56px;
+    padding-block: var(--app-space-12);
+  }
+  .index__item-note {
+    color: var(--outline);
+    font: 400 13px/18px var(--md-ref-typeface-plain), system-ui, sans-serif;
+    letter-spacing: 0;
+  }
+
   .index__label {
     margin: var(--app-space-40) 0 var(--app-space-16);
     padding-inline: var(--app-space-24);
@@ -116,7 +133,10 @@
   <div class="index__list">
     <a class="index__item" href="record-book.html">Record a book</a>
     <a class="index__item" href="record-book-flat.html">Record a book — no dial halo</a>
-    <a class="index__item" href="success-animation.html">Success animation</a>
+    <a class="index__item index__item--noted" href="success-animation.html">
+      <span>Success animation</span>
+      <span class="index__item-note">Scroll to the bottom of the list and tap “Complete the book”</span>
+    </a>
   </div>
 
   <p class="index__label">Viewing</p>
