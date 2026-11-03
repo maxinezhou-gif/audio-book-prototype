@@ -43,35 +43,9 @@
     document.documentElement.setAttribute('data-statusbar', get() ? 'on' : 'off');
   }
 
-  /* Slow motion — quarter speed for every drag duration, so a reviewer can
-     see that the displace and the drop use different easing curves. Off
-     unless asked for; it is an inspection aid, not a default. */
-  var SLOW_KEY = 'app.slowmotion';
-
-  function getSlow() {
-    try {
-      return localStorage.getItem(SLOW_KEY) === '1';
-    } catch (e) {
-      return false;
-    }
-  }
-
-  function setSlow(on) {
-    try {
-      localStorage.setItem(SLOW_KEY, on ? '1' : '0');
-    } catch (e) { /* preference just will not persist; the page still works */ }
-    applySlow();
-  }
-
-  function applySlow() {
-    document.documentElement.setAttribute('data-motion-speed', getSlow() ? 'slow' : 'normal');
-  }
-
   apply();
-  applySlow();
 
   window.Prefs = {
-    statusBar: get, setStatusBar: set, applyStatusBar: apply,
-    slowMotion: getSlow, setSlowMotion: setSlow, applySlowMotion: applySlow
+    statusBar: get, setStatusBar: set, applyStatusBar: apply
   };
 })();

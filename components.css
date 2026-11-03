@@ -480,12 +480,10 @@
 /* ── Drag to reorder ──────────────────────────────────────────
    Four phases, in order: LIFT, TRACK, DISPLACE, DROP.
 
-   Every duration is a multiple of --drag-speed so slow motion has one
-   source of truth. The point of the slow mode is to make the contrast
-   between phase 3 and phase 4 visible — the shuffle is snappy, the
-   landing is heavy — so the two easings must stay different. */
+   Every duration is a multiple of --drag-speed, so the four phases scale
+   from one source of truth. Phases 3 and 4 must keep different easings —
+   the shuffle is snappy, the landing is heavy. */
 :root { --drag-speed: 1; }
-:root[data-motion-speed="slow"] { --drag-speed: 4; }
 
 /* touch-action does not inherit, so the glyph inside the handle would keep
    `auto` and iOS would claim the drag as a scroll. pointer-events: none on the

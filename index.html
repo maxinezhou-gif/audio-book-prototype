@@ -132,17 +132,6 @@
     </button>
   </div>
 
-  <div class="index__setting">
-    <span>
-      <span class="index__setting-text">Slow motion</span>
-      <span class="index__setting-note" id="slowMotionNote"></span>
-    </span>
-    <button class="md-switch" id="slowMotionToggle" role="switch" aria-checked="false"
-            aria-label="Play drag-and-drop animations at quarter speed">
-      <img class="md-switch__handle" src="assets/switch-handle.svg" alt="" width="24" height="24">
-    </button>
-  </div>
-
   <p class="index__tip">Share → Add to Home Screen to run these without the browser bar.</p>
 
 </main>
@@ -164,22 +153,6 @@
     });
 
     sync();
-
-    var slow = document.getElementById('slowMotionToggle');
-    var slowNote = document.getElementById('slowMotionNote');
-
-    function syncSlow() {
-      var on = Prefs.slowMotion();
-      slow.setAttribute('aria-checked', String(on));
-      slowNote.textContent = on ? 'Drag animations at quarter speed' : 'Drag animations at full speed';
-    }
-
-    slow.addEventListener('click', function () {
-      Prefs.setSlowMotion(!Prefs.slowMotion());
-      syncSlow();
-    });
-
-    syncSlow();
   })();
 </script>
 
