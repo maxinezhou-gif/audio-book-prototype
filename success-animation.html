@@ -1,0 +1,450 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pagelark — Success animation</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Pagelark">
+<meta name="theme-color" content="#fffdf3">
+<link rel="apple-touch-icon" href="assets/app-icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cal+Sans&family=Mulish:wght@400;600&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,400,0,0&display=swap">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="components.css">
+<link rel="stylesheet" href="success-motion.css">
+<!-- sets data-statusbar on <html> before first paint -->
+<script src="prefs.js"></script>
+<style>
+  html, body { margin: 0; padding: 0; }
+  body {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 16px 96px;
+    background: #ece8df;
+    font-family: var(--md-ref-typeface-plain), system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .device {
+    position: relative;
+    flex: none;
+    width: 390px;
+    height: 844px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--surface);
+    outline: 1px solid var(--outline);
+    outline-offset: -1px;
+    border-radius: var(--md-sys-shape-corner-extra-large);
+  }
+
+  .statusbar {
+    position: sticky;
+    top: 0;
+    /* above .contents-frame (z-index 1): the frame used to paint over both
+       bars on scroll and swallow them — that was the lift effect, now gone */
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 62px;
+    padding-top: 3px;
+    background: var(--surface);
+    color: var(--on-surface);
+  }
+  /* iOS 27 status bar, measured from the community file (node 12961:29590).
+     SF Pro is the system face here, not a library font — this is OS chrome
+     rather than product UI, so it deliberately sits outside the component set. */
+  .statusbar__time {
+    display: flex;
+    flex: 1 0 0;
+    min-width: 0;
+    height: 13px;
+    align-items: center;
+    justify-content: center;
+    padding-left: 10px;
+    font: 590 17.67px/22px -apple-system, "SF Pro Text", "SF Pro", system-ui, sans-serif;
+    font-variation-settings: "wdth" 100;
+    white-space: nowrap;
+  }
+  .statusbar__island-slot { display: flex; align-items: flex-start; width: 125px; flex: none; padding-top: .167px; }
+  .statusbar__island { flex: 1 0 0; min-width: 0; height: 37px; background: #000; border-radius: 100px; }
+  .statusbar__levels { display: flex; flex: 1 0 0; min-width: 0; align-items: center; justify-content: center; gap: 8px; padding-right: 10px; }
+  .statusbar__cellular { display: flex; align-items: flex-end; gap: 2.333px; padding-top: 1.333px; }
+  .statusbar__cellular i { display: block; width: 3.333px; border-radius: 4px; background: currentColor; }
+  .statusbar__cellular i:nth-child(1) { height: 6.333px; }
+  .statusbar__cellular i:nth-child(2) { height: 8.67px; }
+  .statusbar__cellular i:nth-child(3) { height: 11px; }
+  .statusbar__cellular i:nth-child(4) { height: 13.667px; }
+  /* masked rather than <img> so the glyphs take the bar's own colour */
+  .statusbar__wifi, .statusbar__battery {
+    display: block;
+    background: currentColor;
+    -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+    -webkit-mask-size: 100% 100%; mask-size: 100% 100%;
+  }
+  .statusbar__wifi { width: 19.333px; height: 14.333px; -webkit-mask-image: url(assets/ios/wifi.svg); mask-image: url(assets/ios/wifi.svg); }
+  .statusbar__battery { width: 29.333px; height: 13.667px; -webkit-mask-image: url(assets/ios/battery.svg); mask-image: url(assets/ios/battery.svg); }
+  :root[data-statusbar="off"] .statusbar { display: none; }
+  :root[data-statusbar="on"]  .statusbar { display: flex; }
+
+  .screen {
+    position: relative; z-index: 0;
+    flex: 1 0 0; min-height: 0;
+    overflow-y: auto; overflow-x: hidden;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+  .screen::-webkit-scrollbar { width: 0; }
+  .device > .md-navbar { position: relative; z-index: 3; }
+  .screen .md-appbar { position: sticky; z-index: 2; }
+  :root[data-statusbar="off"] .screen .md-appbar { top: 0; }
+  :root[data-statusbar="on"]  .screen .md-appbar { top: 62px; }
+
+  .contents-frame { position: relative; z-index: 1; display: flex; flex-direction: column; min-height: 100%; }
+  .contents { background: var(--surface); padding: 4px 15px 24px; flex: 1; }
+
+  .cover { position: relative; width: 100%; height: 204px; border-radius: var(--md-sys-shape-corner-medium); overflow: hidden; }
+  .cover img { width: calc(100% + 7px); height: 204px; margin-left: -3px; object-fit: cover; display: block; }
+  /* the outlined button is transparent by default; over a photo it needs an
+     opaque fill or the cover reads straight through the label */
+  .cover .md-btn { position: absolute; left: 117px; top: 93px; background: var(--surface); }
+
+  .form-fields { display: flex; flex-direction: column; gap: var(--app-space-16); margin-top: var(--app-space-16); }
+  .seq { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--app-space-16); height: 40px; margin-top: var(--app-space-16); }
+  .seq__title { color: var(--on-surface); font: 600 16px/24px var(--md-ref-typeface-plain), system-ui, sans-serif; letter-spacing: .15px; }
+  .seq__sub { color: var(--on-surface-variant); font: 400 14px/20px var(--md-ref-typeface-plain), system-ui, sans-serif; letter-spacing: .25px; }
+  .seq .md-switch { margin-top: 4px; }
+
+  .rec { margin-top: var(--app-space-16); display: flex; flex-direction: column; align-items: center; gap: var(--app-space-12); }
+  .rec__header { display: flex; align-items: center; justify-content: space-between; width: 358px; max-width: 100%; height: 48px; }
+  .rec__title { color: var(--on-surface); font: 400 22px/28px var(--md-ref-typeface-brand), var(--md-ref-typeface-plain), system-ui, sans-serif; }
+  .rec__list { display: flex; flex-direction: column; gap: var(--app-space-8); width: 358px; max-width: 100%; padding-block: var(--app-space-12); }
+  .rec__bulk { display: flex; flex-direction: column; gap: var(--app-space-16); width: 358px; max-width: 100%; margin-top: var(--app-space-8); }
+
+  /* ── success screen ─────────────────────────────────────────
+     A full-bleed layer over the device. Figma: a column of
+     [art + copy] and [buttons] with an 80px gap, 358 wide. */
+  .success {
+    position: absolute; inset: 0; z-index: 6;
+    background: var(--surface);
+    display: none;
+    overflow: hidden;
+  }
+  .success.is-open { display: block; }
+
+  .success__stage {
+    position: absolute; left: 50%; top: 62px;
+    width: 358px; height: calc(100% - 62px);
+    transform: translateX(-50%);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 80px;
+  }
+  .success__group { display: flex; flex-direction: column; align-items: center; gap: var(--app-space-8); width: 100%; }
+  /* The three copy lines are <p>, so each carried a 1em UA margin on top of the
+     8px gap — which is why they sat 52px and 44px apart instead of 8. Zeroing
+     the margin hands spacing back to the flex gap alone, so one value controls
+     it. */
+  .success__group p { margin: 0; }
+
+  /* art area — 182 tall in Figma, props positioned inside it */
+  .success__art { position: relative; width: 358px; height: 182px; }
+  .success__character {
+    position: absolute; left: 109px; top: 21px;
+    width: 139.509px; height: 139.509px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .success__character-rot { transform: rotate(18.1deg); }
+  .success__sticker { position: relative; width: 110.62px; height: 110.62px; filter: drop-shadow(0 6.636px 3.318px rgba(0,0,0,.25)); }
+  .success__sticker img { position: absolute; display: block; }
+  .success__sticker .layer { position: absolute; inset: 0; }
+
+  .success__prop { position: absolute; display: flex; align-items: center; justify-content: center; }
+  .success__prop img { display: block; }
+
+  .success__title { color: var(--on-surface); font: 400 22px/28px var(--md-ref-typeface-brand), var(--md-ref-typeface-plain), system-ui, sans-serif; white-space: nowrap; }
+  .success__book  { color: var(--on-surface-variant); font: 400 22px/28px var(--md-ref-typeface-brand), var(--md-ref-typeface-plain), system-ui, sans-serif; white-space: nowrap; }
+  .success__body  { width: 358px; max-width: 100%; text-align: center; color: var(--on-surface); font: 400 14px/20px var(--md-ref-typeface-plain), system-ui, sans-serif; letter-spacing: .25px; }
+  .success__actions { display: flex; flex-direction: column; gap: var(--app-space-16); padding-block: var(--app-space-8); width: 358px; max-width: 100%; }
+
+  .success__confetti { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+
+  /* Option 1 is a Lottie of the whole screen — status bar, copy and buttons
+     included — so it replaces the composed DOM rather than layering over it.
+     Tapping it closes, standing in for its own Done button. */
+  /* an art-frame Lottie sits in the 358x182 slot, so the copy and the
+     buttons below stay real DOM and stay comparable across options */
+  .success__art-lottie { position: absolute; inset: 0; z-index: 1; }
+  .success__art-lottie svg { display: block; width: 100%; height: 100%; }
+  .success.is-art-lottie .success__character,
+  .success.is-art-lottie [data-prop] { display: none; }
+
+  .success__lottie { position: absolute; inset: 0; z-index: 2; cursor: pointer; }
+  .success__lottie svg { display: block; width: 100%; height: 100%; }
+  .success.is-lottie .success__stage { display: none; }
+  /* Option 1 draws the entire screen except the two buttons, so the stage
+     comes back holding only the action pair, floated over the art. The stage
+     itself ignores pointer events so a tap on the illustration still reaches
+     the Lottie; only the buttons take clicks. */
+  .success.is-lottie.has-lottie-actions .success__stage {
+    display: flex;
+    justify-content: flex-end;
+    z-index: 3;
+    pointer-events: none;
+    /* 80 from the bottom — the same offset option 2's centred stage lands on,
+       so the pair does not jump when you switch between options */
+    padding-bottom: 80px;
+  }
+  .success.is-lottie.has-lottie-actions .success__group { display: none; }
+  .success.is-lottie.has-lottie-actions .success__actions { pointer-events: auto; }
+
+  /* Options 2 and 3 draw the artwork and nothing else, so the stage returns in
+     full — title, book, body and buttons — with only its own illustration
+     dropped, since the export is already drawing that. Same flex-end and 80px
+     offset as option 1 above, so the button pair holds its position across all
+     three and you are comparing the art, not the layout. */
+  .success.is-lottie.has-lottie-copy .success__stage {
+    display: flex;
+    justify-content: flex-end;
+    z-index: 3;
+    pointer-events: none;
+    padding-bottom: 80px;
+  }
+  .success.is-lottie.has-lottie-copy .success__art { display: none; }
+  .success.is-lottie.has-lottie-copy .success__actions { pointer-events: auto; }
+
+  /* ── reviewer control — not part of the product UI ───────── */
+  .optbar {
+    position: fixed; left: 50%; bottom: 20px; z-index: 50;
+    transform: translateX(-50%);
+    display: flex; align-items: center; gap: 4px;
+    padding: 6px;
+    background: rgba(27, 28, 23, .92);
+    border-radius: var(--md-sys-shape-corner-full);
+    box-shadow: var(--elevation-level-2);
+    font: 600 13px/18px var(--md-ref-typeface-plain), system-ui, sans-serif;
+  }
+  .optbar__label { color: rgba(255,255,255,.6); padding-inline: 10px 4px; }
+  .optbar button {
+    border: 0; cursor: pointer; color: #fff; background: none;
+    height: 32px; padding-inline: 14px;
+    border-radius: var(--md-sys-shape-corner-full);
+    font: inherit;
+  }
+  .optbar button[aria-pressed="true"] { background: var(--primary-compact); }
+  .optbar button:not([aria-pressed="true"]):hover { background: rgba(255,255,255,.14); }
+  .optbar__replay { display: inline-flex; align-items: center; gap: 6px; }
+  .optbar__replay .ms { font-size: 18px; }
+  .optbar__sep { width: 1px; height: 20px; background: rgba(255,255,255,.2); margin-inline: 4px; }
+
+  .back-link {
+    position: fixed; left: 20px; top: 20px;
+    display: inline-flex; align-items: center; gap: 6px;
+    color: var(--on-surface-variant);
+    font: 600 14px/20px var(--md-ref-typeface-plain), system-ui, sans-serif;
+    text-decoration: none;
+  }
+  .back-link:hover { color: var(--on-surface); }
+  .back-link .ms { font-size: 18px; }
+
+  @media (max-width: 440px), (display-mode: standalone) {
+    html, body { height: 100vh; height: 100dvh; overflow: hidden; overscroll-behavior: none; }
+    body { min-height: 0; padding: 0; background: var(--surface); }
+    .device { width: 100%; height: 100vh; height: 100dvh; outline: 0; border-radius: 0; }
+    /* On a phone the frame fills the screen, and launched from the home
+       screen there is no browser back either — so this is the only way out.
+       Icon-only chip, bottom left, clear of the centred option bar. */
+    .back-link {
+      left: 16px;
+      top: auto;
+      bottom: calc(68px + env(safe-area-inset-bottom));   /* stacked above the option bar, which is centred and nearly full width */
+      z-index: 60;
+      width: 44px;
+      height: 44px;
+      gap: 0;
+      justify-content: center;
+      border-radius: var(--md-sys-shape-corner-full);
+      background: rgba(27, 28, 23, .92);
+      color: #fff;
+      box-shadow: var(--elevation-level-2);
+    }
+    .back-link:hover { color: #fff; }
+    .back-link .ms { font-size: 22px; }
+    .back-link__label { display: none; }
+    :root[data-statusbar="on"] .statusbar { height: calc(62px + env(safe-area-inset-top)); padding-top: env(safe-area-inset-top); }
+    :root[data-statusbar="on"] .screen .md-appbar { top: calc(62px + env(safe-area-inset-top)); }
+    :root[data-statusbar="off"] .screen .md-appbar { top: 0; height: calc(64px + env(safe-area-inset-top)); padding-top: env(safe-area-inset-top); }
+    .device > .md-navbar { height: calc(88px + env(safe-area-inset-bottom)); padding-bottom: calc(var(--app-space-24) + env(safe-area-inset-bottom)); }
+    .optbar { bottom: calc(12px + env(safe-area-inset-bottom)); }
+  }
+</style>
+</head>
+<body>
+
+<a class="back-link" href="index.html" aria-label="Back to all prototypes"><span class="ms">arrow_back</span><span class="back-link__label">All prototypes</span></a>
+
+<div class="device" id="device">
+
+  <main class="screen" id="screen">
+    <div class="statusbar">
+      <span class="statusbar__time">9:41</span>
+      <div class="statusbar__island-slot"><div class="statusbar__island"></div></div>
+      <div class="statusbar__levels">
+        <span class="statusbar__cellular"><i></i><i></i><i></i><i></i></span>
+        <span class="statusbar__wifi"></span>
+        <span class="statusbar__battery"></span>
+      </div>
+    </div>
+
+    <header class="md-appbar">
+      <button class="md-iconbtn" aria-label="Back"><span class="ms">arrow_back</span></button>
+      <h1 class="md-appbar__title">New book</h1>
+      <button class="md-iconbtn" aria-label="Account"><span class="ms">person</span></button>
+    </header>
+
+    <div class="contents-frame">
+      <div class="contents">
+
+        <div class="cover">
+          <img src="assets/cover-placeholder.png" alt="Book cover">
+          <button class="md-btn md-btn--sm md-btn--outlined">Change photo</button>
+        </div>
+
+        <div class="form-fields">
+          <label class="md-field"><span class="md-field__box">
+            <input class="md-field__input" type="text" value="Hoppity Goes to Sea">
+            <span class="md-field__label">Name</span>
+          </span></label>
+          <label class="md-field"><span class="md-field__box">
+            <input class="md-field__input" type="text" value="Marta Vale">
+            <span class="md-field__label">Author</span>
+          </span></label>
+        </div>
+
+        <div class="seq">
+          <div>
+            <div class="seq__title">Play in order</div>
+            <div class="seq__sub">Pages play in sequence. Kids can't skip.</div>
+          </div>
+          <button class="md-switch" role="switch" aria-checked="true" aria-label="Play in order">
+            <img class="md-switch__handle" src="assets/switch-handle.svg" alt="" width="24" height="24">
+          </button>
+        </div>
+
+        <section class="rec">
+          <div class="rec__header">
+            <span class="rec__title">Recording</span>
+            <button class="md-btn md-btn--xs md-btn--text">Add</button>
+          </div>
+          <div class="rec__list" id="recList"></div>
+          <div class="rec__bulk">
+            <button class="md-btn md-btn--md md-btn--filled md-btn--block">Record next audio</button>
+            <button class="md-btn md-btn--md md-btn--outlined md-btn--block" id="completeBtn">Complete the book</button>
+          </div>
+        </section>
+
+      </div>
+    </div>
+  </main>
+
+  <nav class="md-navbar">
+    <button class="md-nav-item">
+      <span class="md-nav-item__indicator"><span class="ms">home</span></span>
+      <span class="md-nav-item__label">Home</span>
+    </button>
+    <button class="md-nav-item" aria-current="page">
+      <span class="md-nav-item__indicator"><span class="ms">mic</span></span>
+      <span class="md-nav-item__label">Create</span>
+    </button>
+    <button class="md-nav-item">
+      <span class="md-nav-item__indicator"><span class="ms">auto_stories</span></span>
+      <span class="md-nav-item__label">Library</span>
+    </button>
+    <button class="md-nav-item">
+      <span class="md-nav-item__indicator"><span class="ms">tune</span></span>
+      <span class="md-nav-item__label">Settings</span>
+    </button>
+  </nav>
+
+  <!-- success screen -->
+  <section class="success" id="success" role="dialog" aria-modal="true" aria-labelledby="successTitle">
+    <div class="success__confetti" id="confetti" hidden></div>
+    <div class="success__lottie" id="lottie" hidden role="img"
+         aria-label="Success screen animation, option 1"></div>
+
+    <div class="success__stage">
+      <div class="success__group">
+        <div class="success__art" id="art">
+          <div class="success__art-lottie" id="artLottie" hidden></div>
+
+          <div class="success__character">
+            <div class="success__character-rot">
+              <div class="success__sticker">
+                <img class="layer success-character" src="assets/success/character-base.svg" alt="" id="characterLayer">
+                <img style="position:absolute;left:17.89%;top:6.64%;right:6.2%;bottom:10.63%;width:75.91%;height:82.73%" src="assets/success/character-body.svg" alt="">
+                <img class="success-eye-open" style="position:absolute;left:36.07%;top:30.18%;width:0.18%;height:0.18%;min-width:4px;min-height:4px" src="assets/success/eye-l-1.svg" alt="">
+                <img class="success-eye-open" style="position:absolute;left:36.41%;top:34.37%;width:0.8%;height:0.14%;min-width:5px;min-height:4px" src="assets/success/eye-l-2.svg" alt="">
+                <img class="success-eye-open" style="position:absolute;left:38.14%;top:34.01%;width:0.4%;height:0.42%;min-width:4px;min-height:4px" src="assets/success/eye-l-3.svg" alt="">
+                <img class="success-eye-open" style="position:absolute;left:48.79%;top:34.7%;width:0.74%;height:1.25%;min-width:5px;min-height:4px" src="assets/success/eye-r-1.svg" alt="">
+                <img class="success-eye-open" style="position:absolute;left:50.89%;top:35.41%;width:0.55%;height:1.27%;min-width:4px;min-height:4px" src="assets/success/eye-r-2.svg" alt="">
+                <img class="success-eye-open" style="position:absolute;left:27.02%;top:21.21%;right:33.71%;bottom:54.96%;width:39.27%;height:23.83%" src="assets/success/brow.svg" alt="">
+                <img class="success-eye-open" style="position:absolute;left:42.46px;top:29.26px;width:7.699px;height:8.469px" src="assets/success/eye-hi-l.svg" alt="">
+                <img class="success-eye-open" style="position:absolute;left:60.68px;top:26.46px;width:8.032px;height:9.073px" src="assets/success/eye-hi-r.svg" alt="">
+                <img style="position:absolute;left:44.05%;top:55.41%;right:45.55%;bottom:36.73%;width:10.4%;height:7.86%" src="assets/success/mouth.svg" alt="">
+                <img class="success-eye-closed" style="position:absolute;left:46.7%;top:24.17%;width:12.18%;height:9.1%" src="assets/success/blink-right.svg" alt="">
+                <img class="success-eye-closed" style="position:absolute;left:31.53%;top:27.22%;width:12.18%;height:9.11%" src="assets/success/blink-left.svg" alt="">
+              </div>
+            </div>
+          </div>
+
+          <!-- props: option 2 and 3 only -->
+          <div class="success__prop success-prop--book" data-prop style="left:35px;top:14px;width:69.614px;height:58.181px">
+            <img src="assets/success/prop-book.svg" alt="" width="62" height="49" style="transform:rotate(9.46deg);filter:drop-shadow(0 .525px .262px rgba(0,0,0,.25))">
+          </div>
+          <div class="success__prop success-prop--butterfly" data-prop style="left:265px;top:83px;width:71.994px;height:71.971px">
+            <img src="assets/success/prop-butterfly.svg" alt="" width="64" height="64" style="transform:rotate(-7.52deg)">
+          </div>
+          <div class="success__prop success-prop--button" data-prop style="left:239px;top:18px;width:43.918px;height:43.918px">
+            <img src="assets/success/prop-button-green.svg" alt="" width="39" height="38" style="transform:rotate(-16.34deg)">
+          </div>
+          <div class="success__prop success-prop--bolt" data-prop style="left:57px;top:94px;width:49.075px;height:57.286px">
+            <img src="assets/success/prop-bolt.svg" alt="" width="31" height="49" style="transform:rotate(-25.06deg)">
+          </div>
+
+        </div>
+
+        <p class="success__title" id="successTitle">You’ve finished</p>
+        <p class="success__book">Hoppity Goes to Sea</p>
+        <p class="success__body">You can now let little ones read it on their own.</p>
+      </div>
+
+      <div class="success__actions">
+        <button class="md-btn md-btn--md md-btn--filled md-btn--block">Show me the library</button>
+        <button class="md-btn md-btn--md md-btn--outlined md-btn--block" id="doneBtn">Done</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div class="optbar" id="optbar" hidden>
+  <span class="optbar__label">Option</span>
+  <button data-opt="1" aria-pressed="false">1</button>
+  <button data-opt="2" aria-pressed="true">2</button>
+  <button data-opt="3" aria-pressed="false">3</button>
+  <span class="optbar__sep"></span>
+  <button class="optbar__replay" id="replayBtn"><span class="ms">refresh</span>Replay</button>
+</div>
+
+<script src="vendor/lottie.min.js"></script>
+<script src="success-confetti.js"></script>
+<script src="success.js"></script>
+</body>
+</html>

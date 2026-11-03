@@ -1,0 +1,14 @@
+{
+  "name": "Pagelark — Record a book",
+  "short_name": "Pagelark",
+  "description": "Interactive prototype of the record-a-book flow",
+  "start_url": "record-book.html",
+  "scope": ".",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#fffdf3",
+  "theme_color": "#fffdf3",
+  "icons": [
+    { "src": "assets/app-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

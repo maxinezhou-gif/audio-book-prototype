@@ -1,0 +1,24 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="41.0131" height="41.0131" viewBox="0 0 41.0131 41.0131" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Button" filter="url(#filter0_d_0_460)">
+<circle id="Rim" cx="20.5066" cy="19.9066" r="18.8006" fill="#B7D5A1" stroke="white" stroke-width="2.21184"/>
+<circle id="Face" cx="20.5064" cy="19.9065" r="13.8019" fill="#9DB58C"/>
+<g id="Frame 105">
+<circle id="Hole" cx="14.6274" cy="17.7669" r="2.03489" transform="rotate(-25 14.6274 17.7669)" fill="#2A2A28"/>
+<circle id="Hole_2" cx="22.6463" cy="14.0274" r="2.03489" transform="rotate(-25 22.6463 14.0274)" fill="#2A2A28"/>
+<circle id="Hole_3" cx="18.3667" cy="25.785" r="2.03489" transform="rotate(-25 18.3667 25.785)" fill="#2A2A28"/>
+<circle id="Hole_4" cx="26.3855" cy="22.0463" r="2.03489" transform="rotate(-25 26.3855 22.0463)" fill="#2A2A28"/>
+</g>
+</g>
+<defs>
+<filter id="filter0_d_0_460" x="1.19209e-07" y="0" width="41.0131" height="41.0131" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<feFlood flood-opacity="0" result="BackgroundImageFix"/>
+<feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+<feOffset dy="0.6"/>
+<feGaussianBlur stdDeviation="0.3"/>
+<feComposite in2="hardAlpha" operator="out"/>
+<feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0"/>
+<feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_0_460"/>
+<feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_0_460" result="shape"/>
+</filter>
+</defs>
+</svg>

@@ -1,0 +1,138 @@
+/* ============================================================
+   Design tokens
+
+   These are the Colour library's Semantic roles, one-to-one: same names,
+   same values, same `var(--name)` syntax Figma emits. A designer reading a
+   layer's variable and a developer reading this file now see the same token.
+   Source: the Colour library's Semantic collection, Green mode.
+
+   Two things to know before editing:
+
+   · Filled buttons use `primary-compact`, not `primary`. The library's own
+     note on it: primary #598300 measures 4.496:1 against white, so it is
+     compliant only under bold 18.66px+ text. This prototype's buttons use
+     label/large at 14px, so they take the compact role at 6.48:1.
+   · `primary-container` is brand/sage #B7D5A1 in Green mode, not green/90.
+
+   Shape, spacing and type below are unchanged.
+   ============================================================ */
+
+:root {
+  /* ── Primary ────────────────────────────────────────── */
+  --primary:                  #598300;  /* green/50 · bold 18.66px+ labels only */
+  --on-primary:               #ffffff;  /* green/100 */
+  --primary-container:        #b7d5a1;  /* brand/sage */
+  --on-primary-container:     #121f00;  /* green/10 · 10.68:1 on the sage */
+  --primary-text:             #466800;  /* green/40 · text and icons on a light surface */
+  --primary-compact:          #466800;  /* green/40 · fill for small buttons · white 6.48:1 */
+  --primary-hover:            #466800;  /* green/40 */
+  --primary-pressed:          #344e00;  /* green/30 · white 9.39:1 */
+  --button-on-filled:         #ffffff;  /* neutral/100 */
+
+  /* ── Secondary · tertiary ───────────────────────────────
+     Unused by this prototype — the client's brand pink and blue. Listed so
+     the file mirrors the library, but nothing here references them. */
+  --secondary:                #f15a86;
+  --on-secondary:             #3f0017;
+  --secondary-container:      #ffd9df;
+  --on-secondary-container:   #3f0017;
+  --secondary-text:           #af2756;
+  --tertiary:                 #4f85dd;
+  --on-tertiary:              #001b3f;
+  --tertiary-container:       #d7e2ff;
+  --on-tertiary-container:    #001b3f;
+  --tertiary-text:            #1c5db2;
+
+  /* ── Error ──────────────────────────────────────────── */
+  --error:                    #ba1a1a;  /* red/40 · white 6.44:1 */
+  --on-error:                 #ffffff;  /* red/100 */
+  --error-container:          #ffdad5;  /* red/90 */
+  --on-error-container:       #410002;  /* red/10 */
+
+  /* ── Surfaces · neutrals ────────────────────────────── */
+  --surface:                  #fffdf3;  /* neutral/99 */
+  --surface-bright:           #fffdf3;  /* neutral/99 */
+  --surface-dim:              #dcdad2;  /* neutral/87 */
+  --surface-variant:          #e3e4d3;  /* neutral-variant/90 · tonal button fill */
+  --surface-container-lowest: #ffffff;  /* neutral/100 */
+  --surface-container-low:    #f9f7ee;  /* neutral/97 */
+  --surface-container:        #f3f1e8;  /* neutral/95 */
+  --surface-container-high:   #eae8e0;  /* neutral/92 */
+  --surface-container-highest:#e4e2da;  /* neutral/90 */
+  --on-surface:               #1b1c17;  /* neutral/10 · 16.56:1 on surface */
+  --on-surface-variant:       #46483c;  /* neutral-variant/30 · 9.16:1 on surface */
+  --outline:                  #77786a;  /* neutral-variant/50 */
+  --outline-variant:          #c7c8b7;  /* neutral-variant/80 */
+  --inverse-surface:          #1b1c17;  /* neutral/10 · snackbars */
+  --inverse-on-surface:       #f3f1e8;  /* neutral/95 */
+  --scrim:                    #000000;  /* neutral/0 · low opacity only */
+  --pressed-surface-container-high: #dcdad2;  /* neutral/87 */
+  --bg-page:                  #ffffff;  /* neutral/100 */
+
+  /* ── Status ─────────────────────────────────────────── */
+  --orange:                   #f58521;  /* orange/70 · fills only, 2.32:1 on its container */
+  --on-orange:                #1b1c17;  /* neutral/10 */
+  --orange-container:         #fff2e9;  /* orange/95 */
+  --on-orange-container:      #713700;  /* orange/30 · 8.51:1 · use for the icon too */
+  --yellow:                   #e9b41d;  /* yellow/80 */
+  --on-yellow:                #1b1c17;  /* neutral/10 */
+  --yellow-container:         #ffdf9a;  /* yellow/90 */
+  --on-yellow-container:      #5a4300;  /* yellow/30 · 7.27:1 */
+
+  /* ── Shape ──────────────────────────────────────────── */
+  --md-sys-shape-corner-none:                 0px;
+  --md-sys-shape-corner-extra-small:          4px;
+  --md-sys-shape-corner-small:                8px;
+  --md-sys-shape-corner-medium:               12px;
+  --md-sys-shape-corner-large:                16px;
+  --md-sys-shape-corner-large-increased:      20px;
+  --md-sys-shape-corner-extra-large:          28px;
+  --md-sys-shape-corner-extra-large-increased:32px;
+  --md-sys-shape-corner-extra-extra-large:    48px;
+  --md-sys-shape-corner-full:                 9999px;
+
+  /* ── Spacing ────────────────────────────────────────── */
+  --app-space-0:  0px;
+  --app-space-4:  4px;
+  --app-space-8:  8px;
+  --app-space-12: 12px;
+  --app-space-16: 16px;
+  --app-space-24: 24px;
+  --app-space-40: 40px;
+
+  /* ── Typeface ───────────────────────────────────────── */
+  --md-ref-typeface-brand: "Cal Sans";
+  --md-ref-typeface-plain: "Mulish";
+
+  /* ── Elevation ──────────────────────────────────────── */
+  --elevation-level-2: 0 1px 2px 0 rgba(0, 0, 0, .3), 0 2px 6px 2px rgba(0, 0, 0, .15);
+}
+
+/* ── Type scale — unchanged ─────────────────────────────── */
+
+.md-display-small { font: 400 36px/44px var(--md-ref-typeface-brand), var(--md-ref-typeface-plain), system-ui, sans-serif; letter-spacing: 0; }
+.md-title-large   { font: 400 22px/28px var(--md-ref-typeface-brand), var(--md-ref-typeface-plain), system-ui, sans-serif; letter-spacing: 0; }
+.md-title-medium  { font: 600 16px/24px var(--md-ref-typeface-plain), system-ui, sans-serif; letter-spacing: .15px; }
+.md-body-large    { font: 400 16px/24px var(--md-ref-typeface-plain), system-ui, sans-serif; letter-spacing: .5px; }
+.md-body-medium   { font: 400 14px/20px var(--md-ref-typeface-plain), system-ui, sans-serif; letter-spacing: .25px; }
+.md-body-small    { font: 400 12px/16px var(--md-ref-typeface-plain), system-ui, sans-serif; letter-spacing: .4px; }
+.md-label-large   { font: 600 14px/20px var(--md-ref-typeface-plain), system-ui, sans-serif; letter-spacing: .1px; }
+.md-label-medium  { font: 600 12px/16px var(--md-ref-typeface-plain), system-ui, sans-serif; letter-spacing: .5px; }
+.md-label-small   { font: 600 11px/16px var(--md-ref-typeface-plain), system-ui, sans-serif; letter-spacing: .5px; }
+
+/* Material Symbols Rounded, unfilled — the library's icon default */
+.ms {
+  font-family: "Material Symbols Rounded";
+  font-weight: 400;
+  font-style: normal;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  font-variation-settings: "FILL" 0, "GRAD" 0, "opsz" 24;
+  -webkit-font-feature-settings: "liga";
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+}

@@ -1,0 +1,571 @@
+/* ============================================================
+   Components
+   Transcribed 1:1 from the source design library component set.
+   Class names map onto the Figma component + variant names.
+
+   Figma                                   CSS
+   Button · Size=Small, Style=Filled        .md-btn.md-btn--sm.md-btn--filled
+   Button · Size=XSmall, Style=Text         .md-btn.md-btn--xs.md-btn--text
+   Button · Size=Medium, Style=Tonal        .md-btn.md-btn--md.md-btn--tonal
+   Text field · Style=Outlined              .md-field
+   Switch · Selected=True                   .md-switch[aria-checked="true"]
+   Status chip · Property 1=No audio        .sm-chip.sm-chip--no-audio
+   Audio tile · Property 1=Front page       .sm-tile.sm-tile--front
+   Audio tile · Property 1=Audio tile       .sm-tile.sm-tile--numbered
+   Audio tile · Property 1=Variant3/4       .sm-tile.is-expanded
+   Customised bottom sheet                  .md-sheet
+   Menu / Menu item                         .md-menu / .md-menu-item
+   ============================================================ */
+
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+
+/* ── Button ───────────────────────────────────────────────── */
+.md-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: none;
+  border-radius: var(--md-sys-shape-corner-full);
+  cursor: pointer;
+  white-space: nowrap;
+  font-family: var(--md-ref-typeface-plain), system-ui, sans-serif;
+  transition: background-color .15s ease, box-shadow .15s ease, opacity .15s ease;
+}
+.md-btn:disabled { opacity: .38; cursor: default; }
+
+/* Sizes — height / padding / gap / label style straight from the library.
+   Longhands, not the `font` shorthand: the shorthand needs a family, so
+   `font: 600 14px/20px inherit` is invalid and silently drops the whole
+   declaration — and a shorthand that did parse would reset font-family
+   and wipe the Mulish set on .md-btn above. */
+
+/* XSmall 32 / Small 40 — Label/Large */
+.md-btn--xs { height: 32px; padding-inline: var(--app-space-12); gap: var(--app-space-4);
+              font-size: 14px; line-height: 20px; font-weight: 600; letter-spacing: .1px; }
+.md-btn--sm { height: 40px; padding-inline: var(--app-space-16); gap: var(--app-space-8);
+              font-size: 14px; line-height: 20px; font-weight: 600; letter-spacing: .1px; }
+/* Medium 56 — Title/Medium */
+.md-btn--md { height: 56px; padding-inline: var(--app-space-24); gap: var(--app-space-8);
+              font-size: 16px; line-height: 24px; font-weight: 600; letter-spacing: .15px; }
+.md-btn--xs .ms, .md-btn--sm .ms { font-size: 20px; }
+.md-btn--md .ms { font-size: 24px; }
+
+/* styles */
+.md-btn--filled   { background: var(--primary-compact); color: var(--button-on-filled); }
+.md-btn--filled:not(:disabled):active   { background: var(--primary-pressed); }
+/* NOT a library emphasis. The library's Button has exactly three — Filled,
+   Outlined and Text — and its own note reads "Hierarchy comes from emphasis,
+   not colour. Filled > Outlined > Text." Tonal predates that and no markup
+   references it any more; every secondary action is Outlined. Left defined so
+   nothing silently loses its styling, but do not reach for it. */
+.md-btn--tonal    { background: var(--surface-variant); color: var(--on-surface-variant); }
+.md-btn--tonal:not(:disabled):active    { background: #c7c8b7; }
+.md-btn--text     { background: none; color: var(--on-primary-container); }
+.md-btn--text:not(:disabled):active     { background: rgba(70, 104, 0, .08); }
+/* Outlined — the library's secondary emphasis (node 30:10).
+   The fill is --surface, not transparent: that is what keeps the button opaque
+   over imagery, which the cover's Change photo depends on, and it gives the
+   pressed wash something to replace. Label is --on-surface, not
+   --on-primary-container: the outline carries the emphasis, not the text. */
+.md-btn--outlined { background: var(--surface); color: var(--on-surface);
+                    border: 1px solid var(--outline); }
+.md-btn--outlined:not(:disabled):active { background: var(--surface-container-high); }
+
+.md-btn--block { width: 100%; }
+
+/* ── Icon button (Small · 40, 24px icon) ──────────────────── */
+.md-iconbtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  flex: none;
+  border: 0;
+  background: none;
+  border-radius: var(--md-sys-shape-corner-full);
+  color: var(--on-surface-variant);
+  cursor: pointer;
+  transition: background-color .15s ease;
+}
+.md-iconbtn .ms { font-size: 24px; }
+.md-iconbtn:not(:disabled):active { background: rgba(27, 28, 23, .08); }
+.md-iconbtn:disabled { opacity: .38; cursor: default; }
+/* XSmall · 32 with a 20px icon — used inside the expanded audio tile */
+.md-iconbtn--xs { width: 32px; height: 32px; }
+.md-iconbtn--xs .ms { font-size: 20px; }
+.md-iconbtn--tonal { background: var(--surface-variant); color: var(--on-surface-variant); }
+
+/* ── Text field · Outlined ────────────────────────────────── */
+.md-field { position: relative; display: flex; flex-direction: column; gap: 4px; width: 100%; }
+.md-field__box {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--app-space-16);
+  height: 56px;
+  padding-inline: var(--app-space-12);
+  border: 1px solid var(--outline);
+  border-radius: var(--md-sys-shape-corner-extra-small);
+}
+.md-field__input {
+  flex: 1 0 0;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: none;
+  padding: 0;
+  color: var(--on-surface);
+  font: 400 16px/24px var(--md-ref-typeface-plain), system-ui, sans-serif;
+  letter-spacing: .5px;
+}
+.md-field__input::placeholder { color: var(--on-surface-variant); }
+/* Floating label sits on the outline — its backdrop must match the surface behind */
+.md-field__label {
+  position: absolute;
+  left: 11px;
+  /* -11 rather than Figma's -9: Body/Medium is 20 tall where Body/Small was 16,
+     so the offset grows by half the difference to keep the label optically
+     centred on the stroke */
+  top: -11px;
+  padding-inline: 4px;
+  background: var(--surface);
+  color: var(--on-surface-variant);
+  font: 400 14px/20px var(--md-ref-typeface-plain), system-ui, sans-serif;
+  letter-spacing: .25px;
+  pointer-events: none;
+}
+.md-field__box:focus-within { border: 2px solid var(--primary-compact); padding-inline: 11px; }
+.md-field__box:focus-within .md-field__label { color: var(--primary-compact); left: 10px; }
+
+/* ── Switch · 52×32 ───────────────────────────────────────── */
+.md-switch {
+  position: relative;
+  width: 52px;
+  height: 32px;
+  flex: none;
+  padding: 0;
+  border: 0;
+  border-radius: 16px;
+  background: var(--surface-container-highest);
+  box-shadow: inset 0 0 0 2px var(--outline);
+  cursor: pointer;
+  transition: background-color .2s ease, box-shadow .2s ease;
+}
+.md-switch__handle {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 24px;
+  height: 24px;
+  transition: left .2s cubic-bezier(.2, 0, 0, 1);
+}
+.md-switch[aria-checked="true"] { background: var(--primary-compact); box-shadow: none; }
+.md-switch[aria-checked="true"] .md-switch__handle { left: 24px; }
+
+/* ── Top app bar · Small 64 ───────────────────────────────── */
+.md-appbar {
+  display: flex;
+  align-items: center;
+  gap: var(--app-space-4);
+  height: 64px;
+  width: 100%;
+  padding-inline: var(--app-space-4);
+  background: var(--surface);
+  flex: none;
+}
+.md-appbar__title {
+  flex: 1 0 0;
+  min-width: 0;
+  padding-left: var(--app-space-4);
+  color: var(--on-surface);
+  font: 400 22px/28px var(--md-ref-typeface-brand), var(--md-ref-typeface-plain), system-ui, sans-serif;
+}
+
+/* ── Navigation bar · 80 ──────────────────────────────────── */
+/* ── Navigation bar ───────────────────────────────────────
+   Four destinations, each a 98x64 cell that is the whole touch target. The
+   centre Create FAB that used to overhang the bar is gone; Create is now an
+   ordinary nav item, so the bar is a flat 64 rather than 80.
+   The Figma design draws these as Heroicons outline; they are Material
+   Symbols Rounded here so the nav matches every other icon in the app. The
+   glyphs differ a little in shape — Library is auto_stories rather than a
+   bookmark square, Settings is tune rather than adjustments-horizontal. */
+.md-navbar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* 64 of bar plus 24 of clearance, so the labels are not jammed against the
+     bottom of the device. box-sizing is border-box, so the padding comes out
+     of the 88 rather than adding to it. */
+  height: 88px;
+  padding-bottom: var(--app-space-24);
+  width: 100%;
+  background: var(--surface);
+  border-top: 1px solid var(--outline-variant);
+  flex: none;
+}
+.md-nav-item {
+  display: flex;
+  flex: 1 0 0;
+  min-width: 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--app-space-4);
+  height: 100%;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  color: var(--on-surface-variant);
+}
+.md-nav-item__indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 32px;
+  border-radius: var(--md-sys-shape-corner-full);
+}
+.md-nav-item__indicator .ms { font-size: 24px; }
+.md-nav-item__label { font: 500 12px/16px var(--md-ref-typeface-plain), system-ui, sans-serif; letter-spacing: .3px; }
+/* The design marks the current destination with colour alone — no filled
+   pill — so icon and label both move to primary together. */
+.md-nav-item[aria-current="page"] { color: var(--primary-compact); }
+
+/* ── Status chip · 32, corner/small ───────────────────────── */
+.sm-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--app-space-8);
+  height: 32px;
+  flex: none;
+  padding-left: var(--app-space-8);
+  padding-right: var(--app-space-16);
+  border-radius: var(--md-sys-shape-corner-small);
+  font: 600 14px/20px var(--md-ref-typeface-plain), system-ui, sans-serif;
+  letter-spacing: .1px;
+}
+.sm-chip .ms { font-size: 18px; }
+.sm-chip--no-audio { background: var(--yellow-container);    color: var(--on-yellow-container); }
+.sm-chip--no-audio .ms { color: var(--on-yellow-container); }
+.sm-chip--unlinked { background: var(--orange-container);    color: var(--on-orange-container); }
+/* Full-strength orange, as the library tag draws it. It measures 2.32:1 on the
+   container, under the 3:1 of WCAG 1.4.11 — but the glyph only repeats the word
+   printed next to it, so nothing is carried by colour or shape alone and the
+   exemption for redundant content applies. The saturation is doing real work:
+   the Unlinked and Linked containers are 1.04:1 apart, so the icon, not the
+   background, is what separates the two tags at a glance. */
+.sm-chip--unlinked .ms { color: var(--orange); }
+/* HARDCODED — mirrors the library's tag component, where these three fills are
+   raw hexes rather than bound variables. #f5fce4 is the tag's own container and
+   has no role of its own; #344e00 is green/30 and #80b323 is brand/green, both
+   real ramp steps that no *semantic* role exposes. Left literal rather than
+   borrowed from an unrelated token (--primary-pressed happens to be #344e00,
+   but a button-pressed role has no business colouring a status tag). */
+.sm-chip--linked   { background: #f5fce4;  color: #344e00; }
+.sm-chip--linked .ms { color: #80b323; }
+
+/* ── Audio tile ───────────────────────────────────────────── */
+.sm-tile { display: flex; align-items: center; gap: var(--app-space-4); width: 100%; max-width: 358px; }
+.sm-tile__handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  flex: none;
+  border: 0;
+  background: none;
+  cursor: grab;
+  padding: 0;
+}
+.sm-tile__handle img { width: 20px; height: 20px; display: block; }
+.sm-tile__card {
+  display: flex;
+  flex: 1 0 0;
+  min-width: 0;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 10px var(--app-space-16);
+  background: var(--surface-bright);
+  /* an inset ring, not a border: the tile's height is content-driven, and a
+     1px border would make it 54/138 where Figma's inside stroke gives 52/136 */
+  box-shadow: inset 0 0 0 1px var(--outline);
+  border-radius: var(--md-sys-shape-corner-medium);
+  text-align: left;
+  font-family: inherit;
+}
+/* 32 tall collapsed: 10 + 32 + 10 = the 52 in Figma */
+.sm-tile__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 32px;
+  flex: none;
+}
+.sm-tile__head--tappable { cursor: pointer; }
+.sm-tile__main { display: flex; align-items: center; gap: var(--app-space-8); min-width: 0; }
+.sm-tile__name {
+  color: var(--on-surface);
+  font: 400 16px/24px var(--md-ref-typeface-plain), system-ui, sans-serif;
+  letter-spacing: .5px;
+  white-space: nowrap;
+}
+.sm-tile__more {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 28px;
+  flex: none;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--on-surface-variant);
+  cursor: pointer;
+}
+.sm-tile__more .ms { font-size: 20px; }
+
+/* expanded — the card grows a player below the head row.
+   12 (gap) + 72 (player) = the 136 tall Variant3 in Figma. */
+.sm-tile__player-wrap {
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height .3s ease-out;
+}
+.sm-tile.is-expanded .sm-tile__player-wrap { max-height: 84px; }
+/* a numbered tile's drag handle stays level with the head row once expanded */
+.sm-tile.is-expanded { align-items: flex-start; }
+.sm-tile.is-expanded .sm-tile__handle { margin-top: 11px; }
+
+.sm-player { display: flex; flex-direction: column; gap: var(--app-space-4); padding-block: var(--app-space-8); margin-top: var(--app-space-12); }
+.sm-player__track-wrap { position: relative; padding: 4px 2px; }
+.sm-player__track { height: 4px; border-radius: 100px; background: var(--pressed-surface-container-high); }
+.sm-player__thumb {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 12px;
+  height: 12px;
+  transform: translateY(-50%);
+  display: block;
+}
+.sm-player__meta { display: flex; flex-direction: column; }
+.sm-player__times {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 16px;
+  margin-bottom: -8px;   /* Figma overlaps the times into the transport row */
+  color: var(--on-surface-variant);
+  font: 600 11px/16px var(--md-ref-typeface-plain), system-ui, sans-serif;
+  letter-spacing: .5px;
+}
+.sm-player__transport { display: flex; align-items: center; justify-content: center; gap: var(--app-space-8); height: 32px; }
+.sm-player__transport .md-iconbtn { color: var(--on-surface); }
+.sm-player__transport .md-iconbtn--tonal { color: var(--on-surface-variant); }
+
+/* ── Bottom sheet ─────────────────────────────────────────── */
+.md-scrim {
+  position: absolute;
+  inset: 0;
+  background: var(--scrim);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .3s ease-out;
+  z-index: 5;
+}
+.md-scrim.is-open { opacity: .32; pointer-events: auto; }
+
+.md-sheet {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 6;
+  transform: translateY(110%);
+  transition: transform .3s ease-out;
+}
+.md-sheet.is-open { transform: translateY(0); }
+.md-sheet__cap { display: block; width: 100%; height: 16px; }
+.md-sheet__body { background: var(--surface-bright); }
+.md-sheet__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 56px;
+  padding: 8px var(--app-space-24);
+}
+.md-sheet__title {
+  color: var(--on-surface);
+  font: 400 22px/28px var(--md-ref-typeface-brand), var(--md-ref-typeface-plain), system-ui, sans-serif;
+}
+.md-sheet__slot {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-16);
+  padding: 0 var(--app-space-16) var(--app-space-24);
+}
+
+/* visual block — waveform + timer */
+.sheet-visual { display: flex; flex-direction: column; align-items: center; gap: 16px; padding-block: var(--app-space-8); }
+.sheet-visual__stage { display: flex; align-items: center; justify-content: center; height: 40px; width: 100%; }
+.sheet-visual__caption { padding: 8px var(--app-space-24); color: var(--on-surface); font: 400 14px/20px var(--md-ref-typeface-plain), system-ui, sans-serif; letter-spacing: .25px; }
+.sheet-visual__hint    { padding: 8px var(--app-space-24); color: var(--on-surface-variant); font: 400 14px/20px var(--md-ref-typeface-plain), system-ui, sans-serif; letter-spacing: .25px; }
+
+/* transport row */
+/* 110 tall exactly — the dial defines the height and overflows the frame's 8px padding */
+.sheet-transport { display: flex; align-items: center; justify-content: center; gap: var(--app-space-40); height: 110px; }
+.sheet-actions   { display: flex; flex-direction: column; gap: var(--app-space-16); padding-block: var(--app-space-8); }
+
+/* the dial — 110 box, 96 ring */
+.sm-dial { position: relative; width: 110px; height: 110px; flex: none; border: 0; background: none; padding: 0; cursor: pointer; }
+.sm-dial__ring {
+  position: absolute;
+  left: 50%;
+  top: 5.5px;
+  width: 96px;
+  height: 96px;
+  margin-left: -48px;
+  border: 4.8px solid var(--surface);
+  border-radius: 120px;
+  box-shadow: 0 1.2px 4.8px 0 rgba(0, 0, 0, .25);
+}
+.sm-dial__inner {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 120px;
+  background: var(--primary-container);
+  color: var(--primary-compact);
+}
+.sm-dial__inner .ms { font-size: 36px; }
+
+/* ── Menu ─────────────────────────────────────────────────── */
+.md-menu {
+  position: absolute;
+  z-index: 7;
+  width: 200px;
+  padding-block: var(--app-space-8);
+  background: var(--surface-container);
+  border-radius: var(--md-sys-shape-corner-medium);
+  box-shadow: var(--elevation-level-2);
+  transform-origin: top right;
+}
+.md-menu-item {
+  display: flex;
+  align-items: center;
+  gap: var(--app-space-12);
+  width: 100%;
+  height: 48px;
+  padding-inline: var(--app-space-12);
+  border: 0;
+  background: none;
+  cursor: pointer;
+  text-align: left;
+  color: var(--on-surface);
+  font: 400 16px/24px var(--md-ref-typeface-plain), system-ui, sans-serif;
+  letter-spacing: .5px;
+}
+.md-menu-item .ms { font-size: 24px; color: var(--on-surface-variant); }
+.md-menu-item:active { background: var(--surface-container-high); }
+.md-menu-item--danger,
+.md-menu-item--danger .ms { color: var(--error); }
+
+/* ── Drag to reorder ──────────────────────────────────────────
+   Four phases, in order: LIFT, TRACK, DISPLACE, DROP.
+
+   Every duration is a multiple of --drag-speed so slow motion has one
+   source of truth. The point of the slow mode is to make the contrast
+   between phase 3 and phase 4 visible — the shuffle is snappy, the
+   landing is heavy — so the two easings must stay different. */
+:root { --drag-speed: 1; }
+:root[data-motion-speed="slow"] { --drag-speed: 4; }
+
+/* touch-action does not inherit, so the glyph inside the handle would keep
+   `auto` and iOS would claim the drag as a scroll. pointer-events: none on the
+   child also guarantees the handle itself is always the event target. */
+.sm-tile__handle {
+  position: relative;
+  cursor: grab;
+  touch-action: none;
+  border-radius: var(--md-sys-shape-corner-small);
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.sm-tile__handle * { touch-action: none; pointer-events: none; }
+/* 30px is the drawn size; this gives it a 44px target without moving anything */
+.sm-tile__handle::after { content: ''; position: absolute; inset: -7px; }
+.sm-tile__handle:focus-visible { outline: 2px solid var(--primary-compact); outline-offset: 2px; }
+.sm-tile.is-lifted .sm-tile__handle { cursor: grabbing; }
+
+/* The resting shadow is two zero-size shadows so the lift can interpolate
+   to real ones. The inset ring is the tile's own outline — it must survive. */
+.sm-tile__card {
+  box-shadow:
+    inset 0 0 0 1px var(--outline),
+    0 0 0 0 rgba(0, 0, 0, 0),
+    0 0 0 0 rgba(0, 0, 0, 0);
+}
+
+/* 1 · LIFT — 160ms ease-out. Elevation is the only change: no scale, no
+   rotation, no tilt, no fade, no recolour. The card's width, fill and
+   border stay pixel-identical for the whole gesture. */
+.sm-tile.is-lifted {
+  position: relative;
+  z-index: 4;
+}
+.sm-tile.is-lifted .sm-tile__card {
+  box-shadow:
+    inset 0 0 0 1px var(--outline),
+    0 6px 16px rgba(0, 0, 0, .10),
+    0 1px 3px rgba(0, 0, 0, .08);
+  transition: box-shadow calc(160ms * var(--drag-speed)) ease-out;
+}
+
+/* 2 · TRACK — 1:1 with the pointer, so no transition at all while dragging */
+.sm-tile.is-lifted { transition: none; }
+
+/* 3 · DISPLACE — 180ms decelerate. One neighbour moves at a time; the gap
+   it leaves is plain empty space, no outline or tint. */
+.sm-tile.is-displacing {
+  transition: transform calc(180ms * var(--drag-speed)) cubic-bezier(.05, .7, .1, 1);
+}
+
+/* 4 · DROP — 280ms, eases in AND out. Deliberately slower than the displace
+   and differently shaped: it reads as weight settling. */
+.sm-tile.is-dropping {
+  transition: transform calc(280ms * var(--drag-speed)) cubic-bezier(.4, 0, .2, 1);
+}
+.sm-tile.is-dropping .sm-tile__card {
+  box-shadow:
+    inset 0 0 0 1px var(--outline),
+    0 0 0 0 rgba(0, 0, 0, 0),
+    0 0 0 0 rgba(0, 0, 0, 0);
+  transition: box-shadow calc(280ms * var(--drag-speed)) cubic-bezier(.4, 0, .2, 1);
+}
+
+/* a drag is a pointer gesture — do not let it select the label text */
+/* iOS turns a long press into a text selection, which fights the drag and
+   leaves selection handles strung across the list. Safari needs the prefixed
+   property, and it has to be on the whole row from the start — scoping it to
+   .is-lifted is too late, the selection has already begun. A list in an app is
+   not selectable text anyway. */
+.sm-tile, .sm-tile * {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sm-tile.is-displacing,
+  .sm-tile.is-dropping,
+  .sm-tile.is-lifted .sm-tile__card,
+  .sm-tile.is-dropping .sm-tile__card { transition: none; }
+}

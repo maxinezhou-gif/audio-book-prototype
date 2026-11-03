@@ -1,0 +1,531 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pagelark — Record a book</title>
+<!-- Add to Home Screen opens this without Safari's chrome, which is the only
+     way to lose the address bar on iOS -->
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Pagelark">
+<meta name="theme-color" content="#fffdf3">
+<link rel="apple-touch-icon" href="assets/app-icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cal+Sans&family=Mulish:wght@400;600&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,400,0,0&display=swap">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="components.css">
+<!-- sets data-statusbar on <html> before first paint -->
+<script src="prefs.js"></script>
+<style>
+  html, body { margin: 0; padding: 0; }
+  body {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 16px;
+    background: #ece8df;
+    font-family: var(--md-ref-typeface-plain), system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* device shell — the 390×844 frame from Figma */
+  .device {
+    position: relative;
+    flex: none;          /* never let a narrow viewport squeeze the 390 frame */
+    width: 390px;
+    height: 844px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--surface);
+    /* an outline, not a border: a border would take 2px out of the inner
+       width and leave the content area at 388 where Figma's frame is a
+       true 390 with the stroke inside it */
+    outline: 1px solid var(--outline);
+    outline-offset: -1px;
+    border-radius: var(--md-sys-shape-corner-extra-large);
+  }
+
+  /* Status bar — the top sticky layer inside the scroller. The contents frame
+     paints above it, so scrolling buries it and coming back up uncovers it
+     again; an overscroll drag reveals it progressively on the way. */
+  .statusbar {
+    position: sticky;
+    top: 0;
+    /* above .contents-frame (z-index 1): the frame used to paint over both
+       bars on scroll and swallow them — that was the lift effect, now gone */
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 62px;
+    padding-top: 3px;
+    background: var(--surface);
+    color: var(--on-surface);
+  }
+  /* iOS 27 status bar, measured from the community file (node 12961:29590).
+     SF Pro is the system face here, not a library font — this is OS chrome
+     rather than product UI, so it deliberately sits outside the component set. */
+  .statusbar__time {
+    display: flex;
+    flex: 1 0 0;
+    min-width: 0;
+    height: 13px;
+    align-items: center;
+    justify-content: center;
+    padding-left: 10px;
+    font: 590 17.67px/22px -apple-system, "SF Pro Text", "SF Pro", system-ui, sans-serif;
+    font-variation-settings: "wdth" 100;
+    white-space: nowrap;
+  }
+  .statusbar__island-slot { display: flex; align-items: flex-start; width: 125px; flex: none; padding-top: .167px; }
+  .statusbar__island { flex: 1 0 0; min-width: 0; height: 37px; background: #000; border-radius: 100px; }
+  .statusbar__levels { display: flex; flex: 1 0 0; min-width: 0; align-items: center; justify-content: center; gap: 8px; padding-right: 10px; }
+  .statusbar__cellular { display: flex; align-items: flex-end; gap: 2.333px; padding-top: 1.333px; }
+  .statusbar__cellular i { display: block; width: 3.333px; border-radius: 4px; background: currentColor; }
+  .statusbar__cellular i:nth-child(1) { height: 6.333px; }
+  .statusbar__cellular i:nth-child(2) { height: 8.67px; }
+  .statusbar__cellular i:nth-child(3) { height: 11px; }
+  .statusbar__cellular i:nth-child(4) { height: 13.667px; }
+  /* masked rather than <img> so the glyphs take the bar's own colour */
+  .statusbar__wifi, .statusbar__battery {
+    display: block;
+    background: currentColor;
+    -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+    -webkit-mask-size: 100% 100%; mask-size: 100% 100%;
+  }
+  .statusbar__wifi { width: 19.333px; height: 14.333px; -webkit-mask-image: url(assets/ios/wifi.svg); mask-image: url(assets/ios/wifi.svg); }
+  .statusbar__battery { width: 29.333px; height: 13.667px; -webkit-mask-image: url(assets/ios/battery.svg); mask-image: url(assets/ios/battery.svg); }
+
+  /* Scroll area. The app bar sticks to the top; the contents frame no longer
+     rides over it — the arch and its travel were removed, and the whole
+     screen is one surface colour, so there is no seam left to hide. */
+  .screen {
+    position: relative;
+    z-index: 0;          /* keep the contents frame's z-index local to the scroller */
+    flex: 1 0 0;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    /* the only scroller in the page — keep its rubber-band to itself rather
+       than letting it chain out to the document and flash the backdrop */
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+  .screen::-webkit-scrollbar { width: 0; }
+
+  /* the nav bar and its overhanging FAB sit above everything that scrolls */
+  .device > .md-navbar { position: relative; z-index: 3; }
+
+  /* sticks directly beneath the status bar rather than at 0, so the two stack
+     instead of the app bar sliding over the status bar */
+  .screen .md-appbar { position: sticky; top: 62px; z-index: 2; }
+
+  /* Exactly one screen tall. It used to be 100% + 24px so the arch had travel
+     to lift clear of the app bar; with the arch gone that spare height only
+     bought a dead scroll nudge, and .screen-tail already provides the room
+     the last control needs. */
+  .contents-frame {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+  }
+  .contents {
+    background: var(--surface);
+    /* the 4px above the cover is padding, not the cover's margin: a top margin
+       on the first child collapses out of .contents and drags the whole frame
+       down, opening a gap at the top of the scroller */
+    padding: 4px 15px 24px;
+    flex: 1;
+  }
+
+  /* Trailing room below the content so the last control is never jammed against
+     the nav bar and there is always somewhere left to scroll — without it the
+     frame ends 24px under the bulk buttons and centring a new tile has nowhere
+     to go. 30% of .screen rather than a vh unit or a fixed number: the scroller
+     has a definite height in both modes, so this is 30% of the 844 artboard on
+     desktop and 30% of the real viewport full screen, with no second rule. */
+  .screen-tail {
+    height: 30%;
+    background: var(--surface);
+  }
+
+  /* cover */
+  .cover {
+    position: relative;
+    width: 100%;
+    height: 204px;
+    border-radius: var(--md-sys-shape-corner-medium);
+    overflow: hidden;
+  }
+  /* Figma layers the cover art 367 wide at x=-3 inside the 360 frame */
+  .cover img { width: calc(100% + 7px); height: 204px; margin-left: -3px; object-fit: cover; display: block; }
+  /* the outlined button is transparent by default; over a photo it needs an
+     opaque fill or the cover reads straight through the label */
+  .cover .md-btn { position: absolute; left: 117px; top: 93px; background: var(--surface); }
+  /* Once a real cover is in place the button steps back out of the way:
+     it is scaffolding for an empty state, not a permanent control.
+     .is-custom is set in app.js when the file picker returns. */
+  .cover.is-custom .md-btn { opacity: .8; }
+  .cover.is-custom .md-btn:hover,
+  .cover.is-custom .md-btn:focus-visible { opacity: 1; }
+
+  /* form */
+  .form-fields { display: flex; flex-direction: column; gap: var(--app-space-16); margin-top: var(--app-space-16); }
+  .seq {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--app-space-16);
+    /* Figma's row is a fixed 40 (24 title + 16 sub). Body/Medium makes the sub
+       20, so the row has to grow rather than clip — 44 at one line. */
+    min-height: 40px;
+    margin-top: var(--app-space-16);
+  }
+  .seq__title { color: var(--on-surface); font: 600 16px/24px var(--md-ref-typeface-plain), system-ui, sans-serif; letter-spacing: .15px; }
+  .seq__sub   { color: var(--on-surface-variant); font: 400 14px/20px var(--md-ref-typeface-plain), system-ui, sans-serif; letter-spacing: .25px; }
+  .seq .md-switch { margin-top: 4px; }
+
+  /* recording block */
+  .rec { margin-top: var(--app-space-16); display: flex; flex-direction: column; align-items: center; gap: var(--app-space-12); }
+  .rec__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 358px;
+    max-width: 100%;
+    height: 48px;
+  }
+  .rec__title { color: var(--on-surface); font: 400 22px/28px var(--md-ref-typeface-brand), var(--md-ref-typeface-plain), system-ui, sans-serif; }
+  .rec__empty { color: var(--on-surface-variant); font: 400 14px/20px var(--md-ref-typeface-plain), system-ui, sans-serif; letter-spacing: .25px; }
+  /* the list frame carries 12px of its own vertical padding in Figma,
+     so the header-to-first-tile gap reads as 24px */
+  .rec__list { display: flex; flex-direction: column; gap: var(--app-space-8); width: 358px; max-width: 100%; padding-block: var(--app-space-12); }
+  .rec__bulk { display: flex; flex-direction: column; gap: var(--app-space-16); width: 358px; max-width: 100%; margin-top: var(--app-space-8); }
+
+  /* a tile entering the list — the "dissolve" */
+  @keyframes tile-dissolve-in {
+    from { opacity: 0; transform: translateY(-6px) scale(.97); filter: blur(3px); }
+    to   { opacity: 1; transform: none; filter: none; }
+  }
+  .sm-tile.is-entering { animation: tile-dissolve-in .42s cubic-bezier(.2, 0, 0, 1) both; }
+  .rec__bulk.is-entering { animation: tile-dissolve-in .42s cubic-bezier(.2, 0, 0, 1) both; }
+
+  /* waveform */
+  .wave { position: relative; width: 211.969px; height: 29.411px; }
+  .wave__bar { position: absolute; border-radius: var(--md-sys-shape-corner-full); background: var(--surface-dim); transition: background-color .12s linear; }
+  .wave__bar.is-played { background: var(--primary-compact); }
+
+  /* Halo around the dial while recording. Scoped to data-motion="pulse" so the
+     flat build can drop it without touching anything else. */
+  @keyframes dial-pulse {
+    0%, 100% { box-shadow: 0 1.2px 4.8px 0 rgba(0, 0, 0, .25), 0 0 0 0 rgba(70, 104, 0, .35); }
+    50%      { box-shadow: 0 1.2px 4.8px 0 rgba(0, 0, 0, .25), 0 0 0 12px rgba(70, 104, 0, 0); }
+  }
+  [data-motion="pulse"] .sm-dial.is-live .sm-dial__ring { animation: dial-pulse 1.6s ease-out infinite; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .sm-tile.is-entering, .rec__bulk.is-entering { animation: none; }
+    [data-motion="pulse"] .sm-dial.is-live .sm-dial__ring { animation: none; }
+    .md-sheet, .md-scrim, .sm-tile__player-wrap { transition: none; }
+  }
+
+  /* toast */
+  .toast {
+    position: absolute;
+    left: 16px;
+    right: 16px;
+    bottom: 96px;
+    z-index: 8;
+    display: flex;
+    align-items: center;
+    min-height: 48px;
+    padding: 14px var(--app-space-16);
+    background: var(--inverse-surface);
+    color: var(--inverse-on-surface);
+    border-radius: var(--md-sys-shape-corner-extra-small);
+    box-shadow: var(--elevation-level-2);
+    font: 400 14px/20px var(--md-ref-typeface-plain), system-ui, sans-serif;
+    letter-spacing: .25px;
+    opacity: 0;
+    transform: translateY(8px);
+    pointer-events: none;
+    transition: opacity .2s ease, transform .2s ease;
+  }
+  .toast.is-open { opacity: 1; transform: none; }
+
+  /* back to the prototype index */
+  .back-link {
+    position: fixed;
+    left: 20px;
+    top: 20px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--on-surface-variant);
+    font: 600 14px/20px var(--md-ref-typeface-plain), system-ui, sans-serif;
+    text-decoration: none;
+  }
+  .back-link:hover { color: var(--on-surface); }
+  .back-link .ms { font-size: 18px; }
+
+  /* ── Full-screen review ───────────────────────────────────────
+     On a phone-sized window, or when launched from the home screen,
+     drop the device shell and fill the viewport. The drawn status bar
+     gives way to the real one, and the two bars grow by the safe-area
+     insets so nothing sits under the notch or the home indicator.
+     100dvh rather than 100vh so Safari's collapsing toolbar does not
+     leave the nav bar hanging below the fold. */
+  @media (max-width: 440px), (display-mode: standalone) {
+    /* Pin the document to the *visual* viewport and stop it scrolling at all.
+       100vh on iOS is the toolbar-hidden height, so a body sized to it is
+       taller than what you can actually see — the page then scrolls behind
+       the shell and the backdrop bleeds in at the edges. dvh tracks the
+       toolbar; overflow hidden means only .screen ever moves. */
+    html, body {
+      height: 100vh;
+      height: 100dvh;
+      overflow: hidden;
+      overscroll-behavior: none;
+    }
+    body { min-height: 0; padding: 0; background: var(--surface); }
+
+    .device {
+      width: 100%;
+      height: 100vh;
+      height: 100dvh;
+      outline: 0;
+      border-radius: 0;
+    }
+
+    /* On a phone the frame fills the screen, and launched from the home
+       screen there is no browser back either — so this is the only way out.
+       Icon-only chip, bottom left, clear of the centred option bar. */
+    .back-link {
+      left: 16px;
+      top: auto;
+      bottom: calc(18px + env(safe-area-inset-bottom));   /* over the navigation bar, which is fixed — the list scrolls, so any position over it eventually lands on a drag handle */
+      left: 8px;
+      z-index: 60;
+      width: 44px;
+      height: 44px;
+      gap: 0;
+      justify-content: center;
+      border-radius: var(--md-sys-shape-corner-full);
+      background: rgba(27, 28, 23, .92);
+      color: #fff;
+      box-shadow: var(--elevation-level-2);
+    }
+    .back-link:hover { color: #fff; }
+    .back-link .ms { font-size: 22px; }
+    .back-link__label { display: none; }
+    .statusbar { display: none; }   /* the device has a real one */
+
+    .screen .md-appbar {
+      top: 0;
+      height: calc(64px + env(safe-area-inset-top));
+      padding-top: env(safe-area-inset-top);
+    }
+
+    .device > .md-navbar {
+      height: calc(88px + env(safe-area-inset-bottom));
+      padding-bottom: calc(var(--app-space-24) + env(safe-area-inset-bottom));
+    }
+  }
+
+  /* An explicit choice from the index overrides the viewport rule above, in
+     either direction — status bar on a phone, or off on a desktop for a clean
+     screenshot. More specific than the rules it replaces, so it wins without
+     !important. Whichever bar is topmost carries the safe-area inset. */
+  :root[data-statusbar="off"] .statusbar { display: none; }
+  :root[data-statusbar="on"]  .statusbar { display: flex; }
+  /* The app bar's sticky offset has to follow the status bar. Sticky pins as
+     soon as the natural position is above the threshold, so leaving top at 62
+     with no status bar above it shoves the bar 62px down and the contents
+     frame then covers it. */
+  :root[data-statusbar="off"] .screen .md-appbar { top: 0; }
+  :root[data-statusbar="on"]  .screen .md-appbar { top: 62px; }
+
+  @media (max-width: 440px), (display-mode: standalone) {
+    :root[data-statusbar="on"] .statusbar {
+      height: calc(62px + env(safe-area-inset-top));
+      padding-top: env(safe-area-inset-top);
+    }
+    :root[data-statusbar="on"] .screen .md-appbar {
+      top: calc(62px + env(safe-area-inset-top));
+      height: 64px;
+      padding-top: 0;
+    }
+    :root[data-statusbar="off"] .screen .md-appbar {
+      top: 0;
+      height: calc(64px + env(safe-area-inset-top));
+      padding-top: env(safe-area-inset-top);
+    }
+  }
+</style>
+</head>
+<body data-motion="pulse">
+
+<a class="back-link" href="index.html" aria-label="Back to all prototypes"><span class="ms">arrow_back</span><span class="back-link__label">All prototypes</span></a>
+
+<div class="device" id="device">
+
+  <!-- scrolling content — status bar and app bar both stick, contents ride over both -->
+  <main class="screen" id="screen">
+
+    <!-- status bar -->
+    <div class="statusbar">
+      <span class="statusbar__time">9:41</span>
+      <div class="statusbar__island-slot"><div class="statusbar__island"></div></div>
+      <div class="statusbar__levels">
+        <span class="statusbar__cellular"><i></i><i></i><i></i><i></i></span>
+        <span class="statusbar__wifi"></span>
+        <span class="statusbar__battery"></span>
+      </div>
+    </div>
+
+    <header class="md-appbar">
+      <button class="md-iconbtn" aria-label="Back"><span class="ms">arrow_back</span></button>
+      <h1 class="md-appbar__title">New book</h1>
+      <button class="md-iconbtn" aria-label="Account"><span class="ms">person</span></button>
+    </header>
+
+    <div class="contents-frame">
+    <div class="contents">
+
+      <!-- cover -->
+      <div class="cover">
+        <img src="assets/cover-placeholder.png" alt="Book cover" id="coverImg">
+        <button class="md-btn md-btn--sm md-btn--outlined" id="changePhotoBtn"
+                aria-haspopup="menu" aria-expanded="false">Change photo</button>
+      </div>
+      <!-- all three menu options land here; "Take a photo" adds capture so a
+           phone opens the camera rather than the gallery -->
+      <input type="file" id="coverInput" accept="image/*" hidden>
+
+      <!-- name + author -->
+      <div class="form-fields">
+        <label class="md-field">
+          <span class="md-field__box">
+            <input class="md-field__input" type="text" placeholder="Book name">
+            <span class="md-field__label">Name</span>
+          </span>
+        </label>
+        <label class="md-field">
+          <span class="md-field__box">
+            <input class="md-field__input" type="text" placeholder="Who's the author of the book">
+            <span class="md-field__label">Author</span>
+          </span>
+        </label>
+      </div>
+
+      <!-- play in order -->
+      <div class="seq">
+        <div>
+          <div class="seq__title">Play in order</div>
+          <div class="seq__sub" id="seqSub">Pages play in sequence. Kids can't skip.</div>
+        </div>
+        <button class="md-switch" id="seqSwitch" role="switch" aria-checked="true" aria-label="Play in order">
+          <img class="md-switch__handle" src="assets/switch-handle.svg" alt="" width="24" height="24">
+        </button>
+      </div>
+
+      <!-- recording -->
+      <section class="rec">
+        <div class="rec__header">
+          <span class="rec__title">Recording</span>
+          <button class="md-btn md-btn--xs md-btn--text" id="addBtn">Add</button>
+        </div>
+
+        <p class="rec__empty" id="emptyNote">Nothing recorded yet.</p>
+        <button class="md-btn md-btn--sm md-btn--filled" id="recordFrontBtn">
+          <span class="ms">add</span>Record Front Page
+        </button>
+
+        <div class="rec__list" id="recList" hidden></div>
+        <div class="rec__bulk" id="bulkActions" hidden>
+          <button class="md-btn md-btn--md md-btn--filled md-btn--block" id="bulkRecordBtn">Record next audio</button>
+          <button class="md-btn md-btn--md md-btn--outlined md-btn--block" id="bulkLinkBtn">Link tag</button>
+        </div>
+      </section>
+
+    </div>
+    </div>
+    <div class="screen-tail" aria-hidden="true"></div>
+  </main>
+
+  <!-- navigation bar -->
+  <nav class="md-navbar">
+    <button class="md-nav-item">
+      <span class="md-nav-item__indicator"><span class="ms">home</span></span>
+      <span class="md-nav-item__label">Home</span>
+    </button>
+    <button class="md-nav-item" id="fabCreate" aria-current="page">
+      <span class="md-nav-item__indicator"><span class="ms">mic</span></span>
+      <span class="md-nav-item__label">Create</span>
+    </button>
+    <button class="md-nav-item">
+      <span class="md-nav-item__indicator"><span class="ms">auto_stories</span></span>
+      <span class="md-nav-item__label">Library</span>
+    </button>
+    <button class="md-nav-item">
+      <span class="md-nav-item__indicator"><span class="ms">tune</span></span>
+      <span class="md-nav-item__label">Settings</span>
+    </button>
+  </nav>
+
+  <!-- scrim + recording sheet -->
+  <div class="md-scrim" id="scrim"></div>
+
+  <section class="md-sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+    <img class="md-sheet__cap" src="assets/sheet-curve.svg" alt="" width="390" height="16">
+    <div class="md-sheet__body">
+      <div class="md-sheet__bar">
+        <span class="md-iconbtn" aria-hidden="true"></span>
+        <span class="md-sheet__title" id="sheetTitle">Front page</span>
+        <button class="md-iconbtn" id="sheetClose" aria-label="Close"><span class="ms">close</span></button>
+      </div>
+
+      <div class="md-sheet__slot">
+        <div class="sheet-visual">
+          <div class="sheet-visual__stage" id="sheetStage" hidden>
+            <div class="wave" id="sheetWave"></div>
+          </div>
+          <span class="sheet-visual__hint" id="sheetHint">Tap to start</span>
+          <span class="sheet-visual__caption" id="sheetTimer" hidden>00:00 / 20:00</span>
+        </div>
+
+        <div class="sheet-transport">
+          <button class="md-iconbtn" id="sheetUndo" aria-label="Record again"><span class="ms">undo</span></button>
+          <button class="sm-dial" id="dial" aria-label="Start recording">
+            <span class="sm-dial__ring">
+              <span class="sm-dial__inner" id="dialInner"><span class="ms" id="dialIcon">mic</span></span>
+            </span>
+          </button>
+          <span class="md-iconbtn" aria-hidden="true"></span>
+        </div>
+
+        <div class="sheet-actions" id="sheetActions" hidden>
+          <button class="md-btn md-btn--md md-btn--filled md-btn--block" id="recordNextBtn">Record next audio</button>
+          <button class="md-btn md-btn--md md-btn--outlined md-btn--block" id="linkStickerBtn">Link to a tag</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- tile overflow menu -->
+  <div class="md-menu" id="tileMenu" hidden></div>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
