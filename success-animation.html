@@ -110,33 +110,30 @@
   :root[data-statusbar="off"] .screen .md-appbar { top: 0; }
   :root[data-statusbar="on"]  .screen .md-appbar { top: 62px; }
 
-  /* Scroll port edges. The app bar and the nav bar are opaque, so anything
-     scrolling under them is cut off dead straight; these two fades carry it
-     out instead. They hang off the bars rather than sitting at fixed offsets,
-     so they follow the bar wherever the status bar and the safe areas put it.
-     Fading surface into surface, they are invisible over blank page — which
-     is why the effect needs no scroll listener. */
-  .screen .md-appbar::after,
-  .device > .md-navbar::before {
+  /* Scroll port edge. The app bar is opaque, so anything scrolling under it is
+     cut off dead straight; a 24px fade carries it out instead. It hangs off
+     the bar rather than sitting at a fixed offset, so it follows it wherever
+     the status bar and the safe areas put it.
+
+     Only this edge: the nav bar had one too, and it read as the last control
+     dissolving rather than as the list running on under the bar.
+
+     It waits for the scroller to move — at rest the cover sits 4px under the
+     app bar, and a fade left on there washes out its top edge. scroll-fade.js
+     sets the attribute. */
+  .screen .md-appbar::after {
     content: "";
     position: absolute;
     left: 0;
     right: 0;
-    height: 24px;
-    pointer-events: none;
-  }
-  /* The top fade waits for the scroller to move: at rest the cover sits 4px
-     under the app bar, and a fade left on there washes out its top edge.
-     scroll-fade.js sets the attribute. The bottom fade needs no such guard —
-     under the last control there is only blank surface for it to fall on. */
-  .screen .md-appbar::after {
     top: 100%;
+    height: 24px;
     opacity: 0;
     transition: opacity .15s linear;
     background: linear-gradient(var(--surface), transparent);
+    pointer-events: none;
   }
   :root[data-scrolled] .screen .md-appbar::after { opacity: 1; }
-  .device > .md-navbar::before { bottom: 100%; background: linear-gradient(transparent, var(--surface)); }
 
   .contents-frame { position: relative; z-index: 1; display: flex; flex-direction: column; min-height: 100%; }
   .contents { background: var(--surface); padding: 4px 15px 24px; flex: 1; }
