@@ -2,3 +2,10 @@
 __pycache__/
 *.pyc
 .mcp.json
+
+# Tooling that lives beside the project but is not part of it: the
+# stageshow skill (installed by `npx skills add`) and the local preview
+# launch config.
+.agents/
+skills-lock.json
+.claude/

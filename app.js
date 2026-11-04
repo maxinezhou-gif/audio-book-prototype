@@ -745,20 +745,35 @@
     setTimeout(settle, DROP_MS * speed());
   }
 
+  /* Numbered pages are positional: "# 2" means the second page of the book,
+     so the list always reads # 1, # 2, # 3 straight down. Move a page and
+     its number follows its new seat — drag # 1 to the foot of four and it
+     becomes # 3. Front page is not numbered and cannot move, so it is
+     skipped and the count starts after it.
+
+     The cost is real and worth knowing: when every tile is on its default
+     "# n", a reorder renumbers straight back, so the labels before and
+     after a drag are identical. What actually moved is each row's content
+     and status. Anything that has to *show* a reorder — a demo, a test, a
+     screenshot in a changelog — has to lean on those rather than on the
+     numbers. */
+  function renumber() {
+    let n = 1;
+    state.tiles.forEach((t) => { if (!t.isFront) t.name = `# ${n++}`; });
+    state.nextNumber = n;
+  }
+
   function commitMove(from, to) {
     if (from !== to) {
       const [moved] = state.tiles.splice(from, 1);
       state.tiles.splice(to, 0, moved);
-      announce(`${moved.name} moved to position ${to + 1} of ${state.tiles.length}`);
+      renumber();
+      // the new name is the useful half: the page the listener will hear
+      // at that point in the book
+      announce(`Moved to position ${to + 1} of ${state.tiles.length}. Now ${moved.name}.`);
     }
     renderList();
   }
-
-  /* Names travel with their tile rather than being renumbered by position.
-     Renumbering looks right in the abstract and is wrong in practice: with
-     every tile on its default "# n", a swap renumbers straight back and the
-     drag appears to have done nothing at all. The label is the recording's
-     name; the order is the order. */
 
   let liveRegion = null;
   function announce(message) {
@@ -847,6 +862,15 @@
     e.preventDefault();
     nudge(tile, e.key === 'ArrowDown' ? 1 : -1);
   });
+
+  /* ── demo seam ────────────────────────────────────────────
+     Exposed so the marketing heroes — and anyone testing by hand — can put
+     the list into a state without walking the whole recording flow for
+     every tile. These are the same two functions the buttons call, with no
+     wrapper and no special path: the app behaves identically whether or
+     not anything uses them, and nothing in the UI does. addTile returns
+     the tile, so a caller can set `duration` before marking the status. */
+  window.PagelarkDemo = { addTile, setStatus };
 
   /* ── init ─────────────────────────────────────────────── */
   buildWave();

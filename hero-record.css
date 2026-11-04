@@ -1,0 +1,220 @@
+/* ============================================================
+   Record-a-page hero
+
+   A marketing hero: the real record-book screen, centred on a glass field
+   and cropped, with the recording flow playing out on it.
+
+   Everything is scoped under .pl-hero so this can drop into any page
+   without leaking. Colours come from tokens.css — see the HARDCODED note
+   on the ground for the one place that does not, and why.
+
+   Design size 640 × 680, scaled to the host width. The stage masks
+   everything: the phone bleeds off the TOP edge, not the bottom, because
+   the payoff (the sheet's two actions) lives at the bottom of the screen
+   and a payoff is never sliced.
+   ============================================================ */
+
+.pl-hero {
+  /* ── ground ─────────────────────────────────────────── */
+  /* HARDCODED — specified directly for this hero. It is not in the Colour
+     library: no token in tokens.css carries this value, and there is no
+     "ground" or "field" role in the Semantic collection it could alias, so
+     borrowing a surface token would claim a meaning this field does not
+     have. The hero's ground is art direction rather than product surface.
+     If a ground role is ever added to the library, this is the one to
+     replace. */
+  --pl-field: #f4ead4;
+
+  /* HARDCODED — the shadow's colour, specified directly alongside the
+     ground. Same reasoning as --pl-field: it is art direction for this
+     hero, no token in tokens.css carries it, and the Semantic collection
+     has no shadow-tint role to alias. The library's only shadow,
+     --elevation-level-2, is a neutral black at low alpha and is what the
+     product itself uses; this is the hero's own.
+
+     Tinted shadows need far more alpha than black ones. #e0cfa2 is only
+     about 20/27/50 steps darker than the ground, so at the 5–20% a
+     near-black shadow uses it would not be visible at all. The deep layer
+     runs at full strength and the blur does the softening. */
+  --pl-shadow-ink: 224, 207, 162;    /* #e0cfa2 */
+
+  /* Scales all three layers together, so the shadow can be dialled without
+     losing the relationship between them. 1 is the tuned value; the
+     preview page's ?tune slider drives this and prints the result. */
+  --pl-shadow-strength: 1;
+
+  /* One shadow for the hero. Nothing else in the frame casts one, so there
+     is no second shadow to disagree with it. These three alphas are the
+     settled values — if you re-open the ?tune slider, 100% is this. */
+  --pl-shadow-hero:
+    0 2px 4px rgba(var(--pl-shadow-ink), calc(.385 * var(--pl-shadow-strength))),
+    0 14px 34px rgba(var(--pl-shadow-ink), calc(.595 * var(--pl-shadow-strength))),
+    0 48px 84px -28px rgba(var(--pl-shadow-ink), calc(.7 * var(--pl-shadow-strength)));
+
+  display: block;
+  width: 100%;
+  container-type: inline-size;
+}
+
+/* The stage is the shot: it fills its slot edge to edge and cuts everything
+   to its own shape. Nothing is allowed outside it. */
+.pl-stage {
+  /* ── the design ─────────────────────────────────────────
+     600 × 750. The story needs 644 device pixels of screen — the grown
+     sheet alone is 482, and "Recording" and the tile sit above it — which
+     is what sets the height. The phone then sits at 65% of the width,
+     inset 17.5% either side, so the ground frames it on three sides and
+     the top crop is the only bleed.
+
+     One gutter on every edge that isn't bled: 105 left, 105 right, and the
+     height is set so the foot matches at 106 rather than being whatever
+     was left over. */
+  --pl-w: 600;
+  --pl-h: 750;
+
+  /* the phone, at true 1:1 — 390 × 844 from the Figma frame — centred */
+  --pl-phone-x: 105px;
+  --pl-phone-top: -200px;   /* crops the status bar and app bar together */
+  --pl-phone-scale: 1;
+
+  position: relative;
+  width: 100%;
+  aspect-ratio: var(--pl-w) / var(--pl-h);
+  overflow: hidden;
+  border-radius: var(--md-sys-shape-corner-extra-large);
+  background: var(--pl-field);
+  isolation: isolate;
+
+  font-family: var(--md-ref-typeface-plain), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Everything inside is positioned in design pixels and scaled as one block,
+   so the composition never reflows — a hero that re-lays out at a different
+   width is a different composition. hero-record.js sets --pl-scale from the
+   stage's measured width. */
+.pl-scaler {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: calc(var(--pl-w) * 1px);
+  height: calc(var(--pl-h) * 1px);
+  transform: scale(var(--pl-scale, 1));
+  transform-origin: top left;
+}
+
+/* the design-pixel coordinate space */
+.pl-scaler > * {
+  position: absolute;
+  transform-origin: top left;
+}
+
+/* ── hero: the phone ────────────────────────────────────
+   The iframe runs record-book.html at its true 390 × 844. The stage does
+   the cropping; the device keeps its own rounded shape on the three edges
+   that stay in frame. */
+
+.pl-phone {
+  left: var(--pl-phone-x);
+  top: var(--pl-phone-top);
+  width: 390px;
+  height: 844px;
+  transform: scale(var(--pl-phone-scale));
+  border-radius: var(--md-sys-shape-corner-extra-large);
+  box-shadow: var(--pl-shadow-hero);
+  /* the shadow is on the shape itself, never a wrapper */
+}
+
+.pl-phone__frame {
+  display: block;
+  width: 390px;
+  height: 844px;
+  border: 0;
+  border-radius: inherit;
+  background: var(--surface);
+  /* an illustration, not a usable screen: every press comes from the
+     timeline, never from the reader */
+  pointer-events: none;
+  /* Safari paints iframe corners square without this */
+  overflow: hidden;
+  -webkit-mask-image: -webkit-radial-gradient(#fff, #000);
+}
+
+/* ── taps ───────────────────────────────────────────────
+   No cursor and no stand-in: nothing walks between controls. A press is
+   marked where it lands and then it is gone, the way a finger leaves a
+   ripple on a touch screen. Between presses the frame is the product
+   alone, which is also what makes the payoff hold clean. */
+
+.pl-tap {
+  left: 0;
+  top: 0;
+  width: 24px;
+  height: 24px;
+  margin: -12px 0 0 -12px;
+  border-radius: 50%;
+  background: rgba(27, 28, 23, .22);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 5;
+  transform: translate3d(var(--pl-tx, 0px), var(--pl-ty, 0px), 0) scale(.4);
+}
+
+.pl-tap[data-tap="1"] {
+  animation: pl-ripple .52s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+}
+
+@keyframes pl-ripple {
+  0%   { opacity: .55; transform: translate3d(var(--pl-tx), var(--pl-ty), 0) scale(.4); }
+  70%  { opacity: .18; }
+  100% { opacity: 0;   transform: translate3d(var(--pl-tx), var(--pl-ty), 0) scale(3.4); }
+}
+
+/* ── reset seam ─────────────────────────────────────────
+   The loop's state snaps back under this dissolve, so nothing is ever seen
+   rewinding: the tile does not un-record, it is gone and the screen is the
+   opening frame again. */
+
+.pl-stage::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 9;
+  pointer-events: none;
+  opacity: 0;
+  background: var(--pl-field);
+  transition: opacity .34s linear;
+}
+
+.pl-stage[data-seam="1"]::after { opacity: 1; }
+
+/* ── compact: the phone column ──────────────────────────
+   A second design, not a squeeze. Below 480 the phone would land under
+   300px across and the sheet would stop reading, so it becomes the whole
+   shot at the column's width, on its own ground. It is not bled sideways:
+   the sheet's two actions run the full width of the screen, and a side
+   bleed would slice them. */
+
+@container (max-width: 480px) {
+  .pl-stage {
+    --pl-w: 358;
+    --pl-h: 600;
+
+    /* 390 × .897 = 350 across, leaving 4 either side; the crop still falls
+       above "Recording" and below the row of type over it */
+    --pl-phone-x: 4px;
+    --pl-phone-top: -177px;
+    --pl-phone-scale: .897;
+
+    border-radius: var(--md-sys-shape-corner-large);
+  }
+}
+
+/* ── reduced motion ─────────────────────────────────────
+   No loop and no ripples: the beat that tells the story on its own, held.
+   hero-record.js reads the same query and never starts the timeline. */
+
+@media (prefers-reduced-motion: reduce) {
+  .pl-tap { display: none; }
+  .pl-stage::after { transition: none; }
+}

@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pagelark — Record a page (hero)</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cal+Sans&family=Mulish:wght@400;600&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,400,0,0&display=swap">
+
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="hero-record.css">
+
+<!-- Page-level only. hero-record.css styles nothing outside .pl-hero so it
+     can drop into a host page without leaking; this reset belongs to this
+     preview page, not to the component. -->
+<style>
+  html, body { margin: 0; padding: 0; background: var(--bg-page); }
+
+  /* ── preview-only shadow tuner ──────────────────────────
+     Not part of the component. It lives outside .pl-hero and only appears
+     with ?tune on the URL, so the plain page stays clean to screen-record
+     and nothing here travels with the hero. */
+  /* In flow under the hero, not floating over it: a panel pinned to a
+     corner covers the very edge whose shadow you are trying to judge. */
+  .pl-tools {
+    width: min(420px, calc(100% - 32px));
+    margin: 24px auto 40px;
+    padding: 16px;
+    border-radius: 16px;
+    background: #fff;
+    border: 1px solid #e4e2da;
+    font: 400 13px/1.5 Mulish, system-ui, sans-serif;
+    color: #1b1c17;
+  }
+  .pl-tools[hidden] { display: none; }
+  .pl-tools__row { display: flex; align-items: baseline; justify-content: space-between; }
+  .pl-tools__name { font-weight: 600; }
+  .pl-tools__val { font-variant-numeric: tabular-nums; color: #46483c; }
+  .pl-tools input[type="range"] { width: 100%; margin: 10px 0 2px; accent-color: #466800; }
+  .pl-tools__scale { display: flex; justify-content: space-between; font-size: 11px; color: #77786a; }
+  .pl-tools__css {
+    display: block;
+    margin-top: 12px;
+    padding: 10px;
+    border-radius: 8px;
+    background: #f3f1e8;
+    font: 400 11px/1.6 ui-monospace, SFMono-Regular, Menlo, monospace;
+    white-space: pre;
+    overflow-x: auto;
+    color: #46483c;
+  }
+  .pl-tools__hint { margin-top: 8px; font-size: 11px; color: #77786a; }
+</style>
+</head>
+<body>
+
+<!-- The hero is one object: a stage that masks everything inside it. Drop it
+     into a page at any width; it scales to fit and keeps its 640×680 design.
+     Nothing here is a screenshot — the phone is record-book.html running live
+     in an iframe, so the chrome, the sheet and every transition are the
+     product's own. -->
+<div class="pl-hero" role="img"
+     aria-label="A phone recording the front page of a book: the Record Front Page button is tapped, an audio tile appears, a sheet slides up, and the recording finishes.">
+
+  <div class="pl-stage" id="plStage">
+   <!-- the design-pixel space, scaled as one block so the composition is
+        identical at every host width -->
+   <div class="pl-scaler" id="plScaler">
+
+    <!-- hero: the real screen, centred, cropped at the top by the stage -->
+    <div class="pl-phone" id="plPhone">
+      <iframe class="pl-phone__frame" id="plFrame"
+              src="record-book.html" title="Pagelark" scrolling="no"
+              tabindex="-1" aria-hidden="true"></iframe>
+    </div>
+
+    <!-- taps: a ripple at the point of contact, nothing between presses -->
+    <span class="pl-tap" id="plTap" aria-hidden="true"></span>
+
+   </div>
+  </div>
+</div>
+
+<!-- Preview-only shadow tuner. Add ?tune to the URL to show it. -->
+<div class="pl-tools" id="plTools" hidden>
+  <div class="pl-tools__row">
+    <span class="pl-tools__name">Shadow opacity</span>
+    <span class="pl-tools__val" id="plShadowVal">100%</span>
+  </div>
+  <input type="range" id="plShadowRange" min="0" max="150" step="1" value="100"
+         aria-label="Shadow opacity">
+  <div class="pl-tools__scale"><span>0</span><span>100</span><span>150</span></div>
+  <code class="pl-tools__css" id="plShadowCss"></code>
+  <p class="pl-tools__hint">All three layers scale together. Paste the above
+    over <code>--pl-shadow-hero</code> in hero-record.css to keep it.</p>
+</div>
+
+<script src="hero-record.js"></script>
+
+<script>
+/* Preview-only. Drives --pl-shadow-strength and prints the resulting
+   declaration, so whatever you settle on can go straight into the
+   stylesheet as literal values. */
+(() => {
+  if (!new URLSearchParams(location.search).has('tune')) return;
+
+  const tools = document.getElementById('plTools');
+  const range = document.getElementById('plShadowRange');
+  const val   = document.getElementById('plShadowVal');
+  const out   = document.getElementById('plShadowCss');
+  const hero  = document.querySelector('.pl-hero');
+
+  /* the three layers as hero-record.css declares them */
+  const LAYERS = [
+    { geom: '0 2px 4px',          alpha: 0.385 },
+    { geom: '0 14px 34px',        alpha: 0.595 },
+    { geom: '0 48px 84px -28px',  alpha: 0.7   }
+  ];
+  const INK = '224, 207, 162';
+
+  function update() {
+    const k = range.value / 100;
+    hero.style.setProperty('--pl-shadow-strength', k);
+    val.textContent = range.value + '%';
+    out.textContent = '--pl-shadow-hero:\n' + LAYERS.map((l) => {
+      const a = Math.min(1, +(l.alpha * k).toFixed(3));
+      return `  ${l.geom} rgba(${INK}, ${a})`;
+    }).join(',\n') + ';';
+  }
+
+  range.addEventListener('input', update);
+  tools.hidden = false;
+  update();
+})();
+</script>
+</body>
+</html>

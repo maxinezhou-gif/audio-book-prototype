@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pagelark — Reorder pages (hero)</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cal+Sans&family=Mulish:wght@400;600&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,400,0,0&display=swap">
+
+<link rel="stylesheet" href="tokens.css">
+<!-- the shared stage system: stage, scaler, phone, shadow, seam, compact -->
+<link rel="stylesheet" href="hero-record.css">
+<!-- only what differs for this scene -->
+<link rel="stylesheet" href="hero-reorder.css">
+
+<style>
+  html, body { margin: 0; padding: 0; background: var(--bg-page); }
+</style>
+</head>
+<body>
+
+<!-- Four pages arrive, then the second is picked up and dropped at the
+     foot of the list. The phone is record-book.html running live in an
+     iframe, so the tiles, their entrance and the whole lift-track-displace-
+     drop of the reorder are the product's own. -->
+<div class="pl-hero" role="img"
+     aria-label="A phone filling with four recorded pages, then the second page is held and dragged to the bottom of the list to reorder it.">
+
+  <div class="pl-stage" id="plStage">
+   <div class="pl-scaler" id="plScaler">
+
+    <!-- hero: the real screen, centred, cropped at the top by the stage -->
+    <div class="pl-phone" id="plPhone">
+      <iframe class="pl-phone__frame" id="plFrame"
+              src="record-book.html" title="Pagelark" scrolling="no"
+              tabindex="-1" aria-hidden="true"></iframe>
+    </div>
+
+    <!-- the hand holding the row through the drag -->
+    <span class="pl-grip" id="plGrip" aria-hidden="true"></span>
+
+   </div>
+  </div>
+</div>
+
+<script src="hero-reorder.js"></script>
+</body>
+</html>

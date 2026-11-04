@@ -384,11 +384,19 @@
   bottom: 0;
   z-index: 6;
   transform: translateY(110%);
-  transition: transform .3s ease-out;
+  /* Eased both ends. ease-out leaves at full speed and reads as a snap on
+     the way in; in and out of rest suits a surface this tall. */
+  transition: transform .3s ease-in-out;
 }
 .md-sheet.is-open { transform: translateY(0); }
-.md-sheet__cap { display: block; width: 100%; height: 16px; }
-.md-sheet__body { background: var(--surface-bright); }
+/* The cap is a 390×16 curve filled with the body's own colour. Its bottom
+   edge and the body's top edge meet at exactly 16px, so at any fractional
+   scale — a zoomed page, a non-integer DPR, the marketing hero — the two
+   land either side of a device pixel and the scrim shows through as a dark
+   hairline under the curve. The 1px overlap costs nothing: the cap's last
+   row is solid fill. */
+.md-sheet__cap { display: block; width: 100%; height: 16px; margin-bottom: -1px; }
+.md-sheet__body { position: relative; background: var(--surface-bright); }
 .md-sheet__bar {
   display: flex;
   align-items: center;
